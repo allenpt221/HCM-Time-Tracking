@@ -4,7 +4,6 @@ import { Timestamp } from "firebase-admin/firestore";
 
 export type UserRole = "employee" | "admin";
 
-export type PunchType = "time_in" | "time_out";
 
 export type SummaryStatus = "complete" | "incomplete";
 
@@ -34,11 +33,9 @@ export type UpdateUserPayload = Partial<Omit<UserDocument, "uid" | "createdAt">>
 export interface AttendanceDocument {
   id?: string;            // Firestore auto-generated doc ID
   userId: string;         // Firebase Auth UID
-  type: PunchType;        // "time_in" | "time_out"
+  punchIn: Timestamp;
+  punchOut: Timestamp;
   timestamp: Timestamp;   // exact punch datetime
-  date: string;           // "YYYY-MM-DD" for easy querying
-  editedBy: string | null;  // admin UID if manually edited
-  editedAt: Timestamp | null;
 }
 
 // For logging a new punch
@@ -54,7 +51,7 @@ export type EditAttendancePayload = {
 
 
 export interface DailySummaryDocument {
-  id?: string;                  // "{userId}_{date}"
+  id?: string;
   userId: string;
   date: string;                 // "YYYY-MM-DD"
   timeIn: Timestamp | null;
@@ -65,7 +62,6 @@ export interface DailySummaryDocument {
   late: number;                 // hours arrived after shift start
   undertime: number;            // hours left before shift end
   totalHours: number;           // regularHours + overtime
-  status: SummaryStatus;        // "complete" | "incomplete"
 }
 
 // For creating/updating a daily summary

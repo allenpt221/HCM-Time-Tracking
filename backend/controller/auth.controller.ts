@@ -4,6 +4,7 @@ import { Timestamp } from "firebase-admin/firestore";
 import type { UserDocument } from "../types/firestore.types";
 
 import dotenv from "dotenv";
+import { to12Hour } from "../utils/time.js";
 dotenv.config();
 
 export async function SignUp(req: Request, res: Response) {
@@ -24,7 +25,18 @@ export async function SignUp(req: Request, res: Response) {
       });
     }
 
-    // ✅ Firebase Auth handles password hashing internally
+    if (!schedule?.start || !schedule?.end) {
+      return res.status(400).json({
+        status: false,
+        message: "Schedule (start and end) is required",
+      });
+    }
+
+    const normalizedSchedule = {
+      start: schedule.start,
+      end: schedule.end,
+    };
+
     const userRecord = await auth.createUser({
       email,
       password,
@@ -37,8 +49,13 @@ export async function SignUp(req: Request, res: Response) {
       email,
       role: role ?? "employee",
       timezone: "Asia/Manila",
-      schedule: schedule ?? { start: "09:00", end: "18:00" },
+      schedule: normalizedSchedule,
       createdAt: Timestamp.now()
+    };
+
+    const schedule12Hour = {
+        start: to12Hour(newUser.schedule.start),
+        end: to12Hour(newUser.schedule.end),
     };
 
     await db.collection("users").doc(userRecord.uid).set(newUser);
@@ -50,7 +67,8 @@ export async function SignUp(req: Request, res: Response) {
         uid: userRecord.uid,
         name: username,
         email,
-        role: newUser.role
+        role: newUser.role,
+        schedule: schedule12Hour,
       }
     });
 

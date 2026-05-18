@@ -1,28 +1,28 @@
 {
   "compilerOptions": {
-    // Environment Settings
+    "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "target": "esnext",
-    "types": ["node"],
-    "typeRoots": ["./src/types", "./node_modules/@types"],  // ← add this
 
-    // Other Outputs
+    "rootDir": "./backend",
+    "outDir": "./dist",
+
+    "strict": true,
+    "skipLibCheck": true,
+
     "sourceMap": true,
     "declaration": true,
     "declarationMap": true,
 
-    // Stricter Typechecking Options
-    "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
+    "types": ["node"],
+    "typeRoots": ["./backend/types", "./node_modules/@types"],
 
-    // Recommended Options
-    "strict": true,
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
     "noUncheckedSideEffectImports": true,
-    "moduleDetection": "force",
-    "skipLibCheck": true,
+    "moduleDetection": "force"
   },
-  "include": ["src/**/*"]  // ← add this
+
+  "include": ["backend/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
 }
