@@ -1,17 +1,20 @@
-import { Route, Routes, Navigate } from "react-router-dom"
+import { Route, Routes, Navigate, useLocation } from "react-router-dom"
+import { useEffect } from "react"
+
 import Loginpage from "./pages/LoginPage"
 import Dashboard from "./pages/Dashboard"
+import Navbar from "./components/Navbar"
 import { authStore } from "./Stores/authStore"
-import { useEffect } from "react";
+import SignupPage from "./pages/SignupPage"
 
 function App() {
-  const { checkAuth, checkingAuth, user } = authStore();
+  const { checkAuth, checkingAuth, user } = authStore()
+  const location = useLocation()
 
   useEffect(() => {
-    checkAuth();
+    checkAuth()
   }, [checkAuth])
 
-  // Show loading spinner while checking auth
   if (checkingAuth) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -20,14 +23,27 @@ function App() {
     )
   }
 
+  // Show navbar only on dashboard
+  const showNavbar = location.pathname === "/dashboard"
+
   return (
     <div>
+      {showNavbar && <Navbar />}
+
       <Routes>
-        {/* If not logged in, show login. If logged in, redirect to dashboard */}
-        <Route path="/" element={!user ? <Loginpage /> : <Navigate to="/dashboard" />} />
-        
-        {/* If logged in, show dashboard. If not, redirect to login */}
-        <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/" />} />
+        <Route
+          path="/"
+          element={!user ? <Loginpage /> : <Navigate to="/dashboard" />}
+        />
+                <Route
+          path="/signup"
+          element={!user ? <SignupPage /> : <Navigate to="/dashboard" />}
+        />
+
+        <Route
+          path="/dashboard"
+          element={user ? <Dashboard /> : <Navigate to="/" />}
+        />
       </Routes>
     </div>
   )

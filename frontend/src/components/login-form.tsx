@@ -1,3 +1,4 @@
+import { Eye, EyeOff } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -10,7 +11,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { useState } from "react"
 import { authStore } from "@/Stores/authStore"
-import { useNavigate } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import bgLogo from '../assets/bg.jpg'
 
 export function LoginForm({
@@ -21,6 +22,7 @@ export function LoginForm({
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const { LogIn, loading, error, clearError } = authStore()
 
   async function handleSubmit(e: React.FormEvent) {
@@ -42,7 +44,7 @@ export function LoginForm({
               <div className="flex flex-col items-center gap-2 text-center mb-2">
                 <h1 className="text-2xl font-bold">Welcome back</h1>
                 <p className="text-sm text-muted-foreground">
-                  Login to your mini HCM Time Tracking
+                  Sign In to your mini HCM Time Tracking
                 </p>
               </div>
 
@@ -80,15 +82,28 @@ export function LoginForm({
                     Forgot your password?
                   </a>
                 </div>
+                <div className="relative">
                 <Input
                   id="password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   value={password}
                   placeholder="••••••••"
-                  onChange={(e) => { setPassword(e.target.value); clearError() }}
-                  className="h-10"
+                  onChange={(e) => {
+                    setPassword(e.target.value)
+                    clearError()
+                  }}
+                  className="h-10 pr-10"
                   required
                 />
+
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
               </Field>
 
               {/* Submit */}
@@ -113,7 +128,7 @@ export function LoginForm({
 
               <FieldDescription className="text-center text-xs">
                 Don&apos;t have an account?{" "}
-                <a href="#" className="underline underline-offset-2 hover:text-primary">Sign up</a>
+                <Link to="/signup" className="underline underline-offset-2 hover:text-primary">Sign up</Link>
               </FieldDescription>
 
             </FieldGroup>

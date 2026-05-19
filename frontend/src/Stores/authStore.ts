@@ -8,7 +8,7 @@ interface UserProps {
     role: string;
 }
 
-interface LoginResult {
+interface Result {
     success: boolean;
     message?: string;
 }
@@ -18,13 +18,23 @@ interface LoginProps {
     password: string;
 }
 
+interface SignupProps {
+    name: string;
+    email: string;
+    password: string;
+    startTime: string;
+    endTime: string;
+    timezone: string;
+}
+
 interface AuthProps {
     user: UserProps | null;
     loading: boolean;
     checkingAuth: boolean;
     justLoggedIn: boolean;
     error: string | null;
-    LogIn: (data: LoginProps) => Promise<LoginResult>;
+    SignUp:(data: SignupProps) => Promise<Result>;
+    LogIn: (data: LoginProps) => Promise<Result>;
     checkAuth: () => Promise<void>;
     LogOut: () => Promise<void>;
     clearError: () => void;
@@ -37,7 +47,7 @@ export const authStore = create<AuthProps>((set) => ({
     justLoggedIn: false,
     error: null,
 
-    LogIn: async ({ email, password }: LoginProps): Promise<LoginResult> => {
+    LogIn: async ({ email, password }: LoginProps): Promise<Result> => {
         set({ loading: true, error: null })
         try {
             const res = await axios.post('/auth/signin', { email, password })
@@ -53,6 +63,46 @@ export const authStore = create<AuthProps>((set) => ({
 
             set({ loading: false, error: message })
             return { success: false, message }
+        }
+    },
+
+    SignUp: async({ name, email, password, startTime, endTime, timezone }: SignupProps): Promise<Result> => {
+        set({ loading: true, error: null });
+        try {
+            await axios.post('/auth/signup', {
+                name,
+                email,
+                password,
+                schedule:{
+                    start: startTime,
+                    end: endTime,
+                },
+                timezone
+            });
+
+            set({
+                loading: false,
+                justLoggedIn: false
+            });
+
+            return {
+                success: true,
+                message: "Account created successfully"
+            };
+
+        } catch (error: any) {
+            const message =
+                error.response?.data?.message || "Signup failed";
+
+            set({
+                loading: false,
+                error: message
+            });
+
+            return {
+                success: false,
+                message
+            };
         }
     },
 

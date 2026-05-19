@@ -9,21 +9,28 @@ dotenv.config();
 
 export async function SignUp(req: Request, res: Response) {
   try {
-    const { username, email, password, confirmPassword, role, schedule } = req.body;
+    const { name, email, password, schedule, timezone } = req.body;
 
-    if (!username || !email || !password || !confirmPassword) {
+    if (!name || !email || !password) {
       return res.status(400).json({
         status: false,
         message: "All fields are required!"
       });
     }
 
-    if (password !== confirmPassword) {
+    const gmailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
+
+    if (!gmailRegex.test(email)) {
       return res.status(400).json({
         status: false,
-        message: "Passwords do not match"
+        message: "Only Gmail accounts are allowed"
       });
     }
+
+    if(password.length < 6){
+      return res.status(400).json({ message: "Password at least 6 characters."});
+    };
+
 
     if (!schedule?.start || !schedule?.end) {
       return res.status(400).json({
@@ -40,15 +47,15 @@ export async function SignUp(req: Request, res: Response) {
     const userRecord = await auth.createUser({
       email,
       password,
-      displayName: username
+      displayName: name
     });
 
     const newUser: UserDocument = {
       uid: userRecord.uid,
-      name: username,
+      name,
       email,
-      role: role ?? "employee",
-      timezone: "Asia/Manila",
+      role: "employee",
+      timezone,
       schedule: normalizedSchedule,
       createdAt: Timestamp.now()
     };
@@ -65,7 +72,7 @@ export async function SignUp(req: Request, res: Response) {
       message: "User registered successfully",
       data: {
         uid: userRecord.uid,
-        name: username,
+        name,
         email,
         role: newUser.role,
         schedule: schedule12Hour,
