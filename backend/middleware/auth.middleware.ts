@@ -10,19 +10,18 @@ declare global {
   }
 }
 
-export const verifyToken = async (
+export async function verifyToken (
   req: Request,
   res: Response,
   next: NextFunction
-) => {
+){
   try {
     const token = req.cookies.accessToken;
 
     if (!token) {
-      return res.status(401).json({ error: "No token provided" });
+      return res.status(401).json({ error: "Unauthorized Access. Please log in" });
     }
 
-    // ✅ Firebase Admin verifies instead of jwt.verify()
     const decoded = await auth.verifyIdToken(token);
 
     if (!decoded?.uid) {
@@ -46,3 +45,13 @@ export const verifyToken = async (
     });
   }
 };
+
+export async function Admin(req: Request, res: Response, next: NextFunction){
+    const user = req.user;
+
+    if (!user || user.role !== "admin") {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+
+    next();
+}

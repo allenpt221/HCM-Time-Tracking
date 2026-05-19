@@ -8,6 +8,8 @@ export function to12Hour(time24: string): string {
   return `${hour}:${minute} ${period}`;
 }
 
+
+
 export function formatMinutesToTime(mins: number) {
   const hours = Math.floor(mins / 60);
   const minutes = mins % 60;

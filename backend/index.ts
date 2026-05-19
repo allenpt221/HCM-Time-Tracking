@@ -6,7 +6,7 @@ import cookieParser from "cookie-parser";
 import authRoutes from "./routes/user.route";
 import attendanceRoutes from "./routes/attendance.route";
 import summariesRoutes from "./routes/summaries.route";
-
+import AdminRoutes from "./routes/admin.route";
 
 
 dotenv.config();
@@ -23,6 +23,8 @@ app.use(cookieParser());
 app.use('/api/auth', authRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/summaries', summariesRoutes);
+app.use('/api/admin', AdminRoutes);
+
 
 
 

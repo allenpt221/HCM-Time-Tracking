@@ -4,17 +4,12 @@ import { Timestamp } from "firebase-admin/firestore";
 import { computeAttendance } from "../utils/calculation";
 import { formatMinutesToTime } from "../utils/time";
 
-/**
- * Helper: generate daily summary ID
- */
 const getSummaryId = (userId: string) => {
   const date = new Date().toISOString().split("T")[0];
   return `${userId}_${date}`;
 };
 
-/* =========================
-   PUNCH IN
-========================= */
+
 export async function punchIn(req: any, res: Response) {
   try {
     const userId = req.user?.uid;
@@ -45,36 +40,35 @@ export async function punchIn(req: any, res: Response) {
 
     const now = Timestamp.now();
 
-    // 📌 CREATE ATTENDANCE
-    const attendance = {
+    const attendanceRef = await db.collection("attendance").add({
       userId,
       punchIn: now,
       punchOut: null,
       createdAt: now,
-      summaryId,
-    };
-
-    const docRef = await db.collection("attendance").add(attendance);
+    });
 
     // 📌 CREATE DAILY SUMMARY
-    await db.collection("summaries").doc(summaryId).set({
-      userId,
-      date: new Date().toISOString().split("T")[0],
-      timeIn: now,
-      timeOut: null,
-      regularHours: 0,
-      overtime: 0,
-      nightDifferential: 0,
-      late: 0,
-      undertime: 0,
-      totalHours: 0,
+    const summaryRef = await db.collection("summaries").add({
+    userId,
+    attendanceId: attendanceRef.id,
+    date: new Date().toISOString().split("T")[0],
+    timeIn: now,
+    timeOut: null,
+    regularHours: 0,
+    overtime: 0,
+    nightDifferential: 0,
+    late: 0,
+    undertime: 0,
+    totalHours: 0,
     });
 
     return res.status(201).json({
       success: true,
-      attendanceId: docRef.id,
-      summaryId,
-      punchIn: now,
+      message: "Punch-in successful",
+      data: {
+        attendanceId: attendanceRef.id,
+        summaryId: summaryRef.id,
+      },
     });
 
   } catch (error: any) {
@@ -97,7 +91,6 @@ export async function punchOut(req: Request, res: Response) {
       });
     }
 
-    // 🔵 FIND ACTIVE ATTENDANCE
     const snapshot = await db
       .collection("attendance")
       .where("userId", "==", userId)
@@ -112,21 +105,20 @@ export async function punchOut(req: Request, res: Response) {
       });
     }
 
-    const docRef = snapshot.docs[0].ref;
-    const data = snapshot.docs[0].data();
+    const attendanceDoc = snapshot.docs[0];
+    const attendanceRef = attendanceDoc.ref;
+    const attendanceData = attendanceDoc.data();
 
-    // 🔴 VALIDATE punchIn
-    if (!data?.punchIn) {
+    if (!attendanceData?.punchIn) {
       return res.status(400).json({
         status: false,
         message: "Invalid record: missing punchIn",
       });
     }
 
-    const timeIn = data.punchIn.toDate();
+    const timeIn = attendanceData.punchIn.toDate();
     const timeOut = new Date();
 
-    // 🔵 GET USER SCHEDULE
     const userSnap = await db.collection("users").doc(userId).get();
 
     if (!userSnap.exists) {
@@ -138,27 +130,35 @@ export async function punchOut(req: Request, res: Response) {
 
     const schedule = userSnap.data()?.schedule;
 
-    // 🧠 COMPUTE ATTENDANCE
     const result = computeAttendance(timeIn, timeOut, schedule);
 
     const formattedResult = {
-        ...result,
-        undertime: formatMinutesToTime(result.undertime),
-        late: formatMinutesToTime(result.late),
-        overtime: formatMinutesToTime(result.overtime),
+      ...result,
+      undertime: formatMinutesToTime(result.undertime),
+      late: formatMinutesToTime(result.late),
+      overtime: formatMinutesToTime(result.overtime),
     };
 
-    const summaryId = data.summaryId;
+    const summarySnap = await db
+      .collection("summaries")
+      .where("attendanceId", "==", attendanceDoc.id)
+      .limit(1)
+      .get();
 
+    if (summarySnap.empty) {
+      return res.status(400).json({
+        status: false,
+        message: "Summary not found for this attendance",
+      });
+    }
 
-    // 💾 UPDATE ATTENDANCE
-    await docRef.update({
+    const summaryRef = summarySnap.docs[0].ref;
+
+    await attendanceRef.update({
       punchOut: Timestamp.now(),
-      ...result,
     });
 
-    // 💾 UPDATE SUMMARY
-    await db.collection("summaries").doc(summaryId).update({
+    await summaryRef.update({
       timeOut: Timestamp.now(),
       ...result,
     });
@@ -191,13 +191,18 @@ export async function userAttendance(req: any, res: Response) {
     const snapshot = await db
       .collection("attendance")
       .where("userId", "==", userId)
-      .orderBy("createdAt", "desc")
       .get();
 
-    const data = snapshot.docs.map((doc: any) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    const data = snapshot.docs
+      .map((doc: any) => ({
+        id: doc.id,
+        ...doc.data(),
+      }))
+      .sort((a: any, b: any) => {
+        const dateA = a.createdAt?.toDate?.() ?? new Date(a.createdAt);
+        const dateB = b.createdAt?.toDate?.() ?? new Date(b.createdAt);
+        return dateB.getTime() - dateA.getTime();
+      });
 
     return res.status(200).json({
       success: true,
