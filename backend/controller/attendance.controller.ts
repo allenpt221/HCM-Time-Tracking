@@ -4,15 +4,16 @@ import { Timestamp } from "firebase-admin/firestore";
 import { computeAttendance } from "../utils/calculation";
 import { formatMinutesToTime } from "../utils/time";
 
-const getSummaryId = (userId: string) => {
-  const date = new Date().toISOString().split("T")[0];
-  return `${userId}_${date}`;
-};
 
 
 export async function punchIn(req: any, res: Response) {
   try {
     const userId = req.user?.uid;
+
+
+    const startWork = req.user?.schedule.start;
+
+    console.log(startWork)
 
     if (!userId) {
       return res.status(401).json({
@@ -21,9 +22,6 @@ export async function punchIn(req: any, res: Response) {
       });
     }
 
-    const summaryId = getSummaryId(userId);
-
-    // 🔴 prevent duplicate active session
     const active = await db
       .collection("attendance")
       .where("userId", "==", userId)
@@ -37,8 +35,17 @@ export async function punchIn(req: any, res: Response) {
         message: "Already punched in",
       });
     }
+    
 
-    const now = Timestamp.now();
+    const now = new Date();
+
+    const inMin = now.getHours() * 60 + now.getMinutes();
+    const shiftStart =
+      Number(startWork.split(":")[0]) * 60 +
+      Number(startWork.split(":")[1]);
+    const lateMinutes = Math.max(0, inMin - shiftStart);
+
+    const nowTimestamp = Timestamp.fromDate(now)
 
     const attendanceRef = await db.collection("attendance").add({
       userId,
@@ -47,7 +54,6 @@ export async function punchIn(req: any, res: Response) {
       createdAt: now,
     });
 
-    // 📌 CREATE DAILY SUMMARY
     const summaryRef = await db.collection("summaries").add({
     userId,
     attendanceId: attendanceRef.id,
@@ -57,7 +63,7 @@ export async function punchIn(req: any, res: Response) {
     regularHours: 0,
     overtime: 0,
     nightDifferential: 0,
-    late: 0,
+    late: lateMinutes,
     undertime: 0,
     totalHours: 0,
     });
