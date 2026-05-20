@@ -28,7 +28,28 @@ export function SignupForm({
   const [timezone, setTimezone] = useState('Asia/Manila');
   const [showPassword, setShowPassword] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [visible, setVisible] = useState(false);
+  const [fadingOut, setFadingOut] = useState(false);
   const { SignUp, loading, error, clearError } = authStore()
+
+  useEffect(() => {
+    if (error) {
+      setVisible(true);
+      setFadingOut(false);
+
+      const fadeTimer = setTimeout(() => setFadingOut(true), 3000);
+      const clearTimer = setTimeout(() => {
+        clearError();
+        setVisible(false);
+        setFadingOut(false);
+      }, 3300);
+
+      return () => {
+        clearTimeout(fadeTimer);
+        clearTimeout(clearTimer);
+      };
+    }
+  }, [error]);
 
   useEffect(() => {
     if (!showSuccess) return;
@@ -80,8 +101,13 @@ export function SignupForm({
               </div>
 
               {/* Error Message */}
-              {error && (
-                <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+              {visible && (
+                <div
+                  className={cn(
+                    "flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 transition-opacity duration-300",
+                    fadingOut ? "opacity-0" : "opacity-100"
+                  )}
+                >
                   <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <circle cx="12" cy="12" r="10"/>
                     <line x1="12" y1="8" x2="12" y2="12"/>
@@ -222,7 +248,7 @@ export function SignupForm({
 
               <FieldDescription className="text-center text-xs">
                 Already have an account?{" "}
-                <Link  to="/" className="underline underline-offset-2 hover:text-primary">Sign In</Link>
+                <Link to="/" className="underline underline-offset-2 hover:text-primary">Sign In</Link>
               </FieldDescription>
 
             </FieldGroup>

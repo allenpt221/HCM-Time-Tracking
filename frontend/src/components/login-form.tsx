@@ -9,7 +9,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { authStore } from "@/Stores/authStore"
 import { Link, useNavigate } from "react-router-dom"
 import bgLogo from '../assets/bg.jpg'
@@ -23,7 +23,28 @@ export function LoginForm({
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [visible, setVisible] = useState(false);
+  const [fadingOut, setFadingOut] = useState(false);
   const { LogIn, loading, error, clearError } = authStore()
+
+  useEffect(() => {
+    if (error) {
+      setVisible(true);
+      setFadingOut(false);
+
+      const fadeTimer = setTimeout(() => setFadingOut(true), 3000);
+      const clearTimer = setTimeout(() => {
+        clearError();
+        setVisible(false);
+        setFadingOut(false);
+      }, 3300);
+
+      return () => {
+        clearTimeout(fadeTimer);
+        clearTimeout(clearTimer);
+      };
+    }
+  }, [error]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -49,8 +70,13 @@ export function LoginForm({
               </div>
 
               {/* Error Message */}
-              {error && (
-                <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+              {visible && (
+                <div
+                  className={cn(
+                    "flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 transition-opacity duration-300",
+                    fadingOut ? "opacity-0" : "opacity-100"
+                  )}
+                >
                   <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <circle cx="12" cy="12" r="10"/>
                     <line x1="12" y1="8" x2="12" y2="12"/>
@@ -83,27 +109,26 @@ export function LoginForm({
                   </a>
                 </div>
                 <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  placeholder="••••••••"
-                  onChange={(e) => {
-                    setPassword(e.target.value)
-                    clearError()
-                  }}
-                  className="h-10 pr-10"
-                  required
-                />
-
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    placeholder="••••••••"
+                    onChange={(e) => {
+                      setPassword(e.target.value)
+                      clearError()
+                    }}
+                    className="h-10 pr-10"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
               </Field>
 
               {/* Submit */}
@@ -135,7 +160,7 @@ export function LoginForm({
           </form>
 
           {/* Right Side - Image */}
-          <div className="relative hidden md:block ">
+          <div className="relative hidden md:block">
             <img
               src={bgLogo}
               alt="Image"
