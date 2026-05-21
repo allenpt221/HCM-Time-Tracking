@@ -6,6 +6,10 @@ interface UserProps {
     name: string;
     email: string;
     role: string;
+    schedule: {
+        start: string;
+        end: string;
+    }
 }
 
 interface Result {

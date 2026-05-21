@@ -195,7 +195,7 @@ export async function userAttendance(req: any, res: Response) {
     }
 
     const snapshot = await db
-      .collection("attendance")
+      .collection("summaries")
       .where("userId", "==", userId)
       .get();
 
