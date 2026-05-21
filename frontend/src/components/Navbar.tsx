@@ -1,13 +1,21 @@
 import { authStore } from "@/Stores/authStore"
 import { Hourglass, LogOut, Menu, X } from "lucide-react"
 import { useState } from "react"
+import { Link } from "react-router-dom";
 
 function Navbar() {
 
   const { user } = authStore();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const navItems = ["dashboard", "admin"]
+  const navItems = [{
+    item: 'Dashboard',
+    href: '/dashboard'
+  }, {
+    item: 'Admin',
+    href: '/admin'
+
+  }]
 
   return (
     <>
@@ -28,12 +36,12 @@ function Navbar() {
             {/* Desktop Nav Items */}
             <div className="hidden md:flex items-center gap-6">
               {navItems.map((item, index) => (
-                <span
+                <Link to={item.href}
                   key={index}
                   className="text-gray-600 hover:text-indigo-500 cursor-pointer capitalize transition"
                 >
-                  {item}
-                </span>
+                  {item.item}
+                </Link>
               ))}
             </div>
           </div>
@@ -94,13 +102,13 @@ function Navbar() {
         {/* Nav Items */}
         <div className="flex flex-col px-5 py-4 gap-1">
           {navItems.map((item, index) => (
-            <span
+            <Link to={item.href}
               key={index}
               className="text-gray-700 hover:text-indigo-500 hover:bg-indigo-50 cursor-pointer capitalize transition rounded-lg px-3 py-2.5 text-sm font-medium"
               onClick={() => setMenuOpen(false)}
             >
-              {item}
-            </span>
+              {item.item}
+            </Link>
           ))}
         </div>
 
