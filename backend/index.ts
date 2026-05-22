@@ -34,7 +34,7 @@ app.use('/api/attendance', attendanceRoutes);
 app.use('/api/admin', AdminRoutes);
 
 
-const frontendPath = path.join(__dirname, '../../frontend/dist');
+const frontendPath = path.join(__dirname, '../frontend/dist')
 app.use(express.static(frontendPath));
 console.log(frontendPath)
 
