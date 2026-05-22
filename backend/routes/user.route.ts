@@ -1,5 +1,5 @@
 import express from 'express';
-import { SignUp, SignIn, GetProfile } from '../controller/auth.controller';
+import { SignUp, SignIn, GetProfile, SignOut } from '../controller/auth.controller';
 import { verifyToken } from '../middleware/auth.middleware';
 
 const Route = express.Router();
@@ -7,6 +7,9 @@ const Route = express.Router();
 Route.post('/signup', SignUp);
 
 Route.post('/signin', SignIn);
+
+Route.post('/signout', SignOut);
+
 
 Route.get('/profile', verifyToken, GetProfile);
 
