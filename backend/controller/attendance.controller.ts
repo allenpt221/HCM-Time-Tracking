@@ -1,8 +1,8 @@
 import type { Request, Response } from "express";
-import { db } from "../config/firestore.config";
+import { db } from "../config/firestore.config.js";
 import { Timestamp } from "firebase-admin/firestore";
-import { computeAttendance } from "../utils/calculation";
-import { formatMinutesToTime } from "../utils/time";
+import { computeAttendance } from "../utils/calculation.js";
+import { formatMinutesToTime } from "../utils/time.js";
 
 export async function punchIn(req: any, res: Response) {
   try {

@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { auth, db } from "../config/firestore.config.js";
 import { Timestamp } from "firebase-admin/firestore";
-import type { UserDocument } from "../types/firestore.types";
+import type { UserDocument } from "../types/firestore.types.js";
 
 import dotenv from "dotenv";
 import { to12Hour } from "../utils/time.js";

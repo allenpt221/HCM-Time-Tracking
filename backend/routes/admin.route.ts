@@ -1,6 +1,6 @@
 import express from "express";
-import { Admin, verifyToken } from "../middleware/auth.middleware";
-import { getAllAttendance, updatePunch } from "../controller/admin.controller";
+import { Admin, verifyToken } from "../middleware/auth.middleware.js";
+import { getAllAttendance, updatePunch } from "../controller/admin.controller.js";
 
 const Route = express.Router();
 

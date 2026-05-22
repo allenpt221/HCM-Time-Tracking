@@ -3,10 +3,9 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import cookieParser from "cookie-parser";
 
-import authRoutes from "./routes/user.route";
-import attendanceRoutes from "./routes/attendance.route";
-import summariesRoutes from "./routes/summaries.route";
-import AdminRoutes from "./routes/admin.route";
+import authRoutes from "./routes/user.route.js";
+import attendanceRoutes from "./routes/attendance.route.js";
+import AdminRoutes from "./routes/admin.route.js";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -32,7 +31,6 @@ app.use(cookieParser());
 
 app.use('/api/auth', authRoutes);
 app.use('/api/attendance', attendanceRoutes);
-app.use('/api/summaries', summariesRoutes);
 app.use('/api/admin', AdminRoutes);
 
 

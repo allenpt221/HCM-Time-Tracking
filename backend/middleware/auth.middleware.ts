@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import { auth, db } from "../config/firestore.config.js";
-import type { UserDocument } from "../types/firestore.types";
+import type { UserDocument } from "../types/firestore.types.js";
 
 declare global {
   namespace Express {

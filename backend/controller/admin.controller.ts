@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
-import { db } from "../config/firestore.config";
-import { computeAttendance } from "../utils/calculation";
-import { formatMinutesToTime } from "../utils/time";
+import { db } from "../config/firestore.config.js";
+import { computeAttendance } from "../utils/calculation.js";
+import { formatMinutesToTime } from "../utils/time.js";
 import { Timestamp } from "firebase-admin/firestore";
 
 
