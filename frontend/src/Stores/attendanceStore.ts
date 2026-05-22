@@ -33,10 +33,9 @@ interface AdminAttendanceRecord {
     name: string;
     email: string;
     role: string;
-    schedule?: { start: string; end: string };  // ← add this
+    schedule?: { start: string; end: string };
   } | null;
 }
-
 
 interface PunchOutResult {
   regularHours: number;
@@ -58,7 +57,7 @@ interface AttendanceState {
   elapsed: number;
   punchInTime: Date | null;
   EmployeeAttendance: AdminAttendanceRecord[] | null;
-  
+
   punchIn: () => Promise<{ success: boolean }>;
   punchOut: () => Promise<{ success: boolean }>;
   fetchAttendance: () => Promise<void>;
@@ -102,156 +101,156 @@ export const attendanceStore = create<AttendanceState>()((set, get) => ({
     set({ elapsed: 0, punchInTime: null });
   },
 
-punchIn: async (): Promise<{ success: boolean }> => {
-  set({ loading: true, error: null });
-  try {
-    const res = await axios.post('attendance/punch-in');
-    const now = new Date();
-    const today = new Date().toISOString().split("T")[0];
+  punchIn: async (): Promise<{ success: boolean }> => {
+    set({ loading: true, error: null });
+    try {
+      const res = await axios.post('attendance/punch-in');
+      const now = new Date();
+      const today = new Date().toISOString().split("T")[0];
 
-    const newRecord: AttendanceRecord = {
-      id: res.data.data.summaryId,
-      userId: '',
-      attendanceId: res.data.data.attendanceId,
-      date: today,
-      timeIn: { _seconds: Math.floor(now.getTime() / 1000), _nanoseconds: 0 },
-      timeOut: null,
-      late: 0,
-      regularHours: 0,
-      overtime: 0,
-      undertime: 0,
-      nightDifferential: 0,
-      totalHours: 0,
-    };
+      const newRecord: AttendanceRecord = {
+        id: res.data.data.summaryId,
+        userId: '',
+        attendanceId: res.data.data.attendanceId,
+        date: today,
+        timeIn: { _seconds: Math.floor(now.getTime() / 1000), _nanoseconds: 0 },
+        timeOut: null,
+        late: 0,
+        regularHours: 0,
+        overtime: 0,
+        undertime: 0,
+        nightDifferential: 0,
+        totalHours: 0,
+      };
 
-    set((state) => ({
-      loading: false,
-      attendanceId: res.data.data.attendanceId,
-      summaryId: res.data.data.summaryId,
-      isClockedIn: true,
-      history: [newRecord, ...state.history],
-    }));
+      set((state) => ({
+        loading: false,
+        attendanceId: res.data.data.attendanceId,
+        summaryId: res.data.data.summaryId,
+        isClockedIn: true,
+        history: [newRecord, ...state.history],
+      }));
 
-    get().startTimer(now);
+      // Start timer immediately from local time
+      get().startTimer(now);
 
-    // Sync with server in background
-    get().fetchAttendance();
+      // Sync with server in background but don't restart timer
+      get().fetchAttendance();
 
-    return { success: true };
+      return { success: true };
 
-  } catch (error: any) {
-    set({ loading: false, error: error.response?.data?.message ?? "Punch-in failed" });
-    return { success: false };
-  }
-},
-
-punchOut: async (): Promise<{ success: boolean }> => {
-  set({ loading: true, error: null });
-  try {
-    const res = await axios.post('attendance/punch-out');
-    const now = new Date();
-    const data = res.data.data;
-
-    set((state) => ({
-      loading: false,
-      isClockedIn: false,
-      punchOutResult: data,
-      attendanceId: null,
-      summaryId: null,
-      history: state.history.map((r) =>
-        r.attendanceId === state.attendanceId
-          ? {
-              ...r,
-              // Only update timeOut optimistically, leave computed fields for fetchAttendance
-              timeOut: { _seconds: Math.floor(now.getTime() / 1000), _nanoseconds: 0 },
-            }
-          : r
-      ),
-    }));
-
-    get().stopTimer();
-
-    // Fetch real computed values from server
-    await get().fetchAttendance();
-
-    return { success: true };
-
-  } catch (error: any) {
-    set({ loading: false, error: error.response?.data?.message ?? "Punch-out failed" });
-    return { success: false };
-  }
-},
-
-fetchAttendance: async (): Promise<void> => {
-  set({ loading: true, error: null });
-  try {
-    const res = await axios.get('attendance/user-attendance');
-    const today = new Date().toISOString().split("T")[0];
-
-    const all: AttendanceRecord[] = res.data.data;
-
-    // Only show today's records, sorted by timeIn descending
-    const todayRecords = all
-      .filter(r => r.date === today)
-      .sort((a, b) => (b.timeIn?._seconds ?? 0) - (a.timeIn?._seconds ?? 0));
-
-    const active = todayRecords.find(r => !r.timeOut);
-
-    set({
-      loading: false,
-      history: todayRecords,
-      isClockedIn: !!active,
-      attendanceId: active?.attendanceId ?? null,
-      summaryId: active?.id ?? null,
-      lateMinutes: active?.late ?? 0,
-    });
-
-    if (active?.timeIn) {
-      const punchInDate = new Date(active.timeIn._seconds * 1000);
-      get().startTimer(punchInDate);
+    } catch (error: any) {
+      set({ loading: false, error: error.response?.data?.message ?? "Punch-in failed" });
+      return { success: false };
     }
+  },
 
-  } catch (error: any) {
-    set({
-      loading: false,
-      error: error.response?.data?.message ?? "Failed to fetch attendance",
-    });
-  }
-},
+  punchOut: async (): Promise<{ success: boolean }> => {
+    set({ loading: true, error: null });
+    try {
+      const res = await axios.post('attendance/punch-out');
+      const now = new Date();
+      const data = res.data.data;
 
-AdminAttendance: async (): Promise<void> => {
-  set({ loading: true, error: null });
-  try {
-    const res = await axios.get('admin/allattendance');
-    set({ EmployeeAttendance: res.data.data, loading: false });
-  } catch (error: any) {
-    set({
-      loading: false,
-      error: error.response?.data?.message ?? "Failed to fetch all attendance",
-    });
-  }
-},
+      set((state) => ({
+        loading: false,
+        isClockedIn: false,
+        punchOutResult: data,
+        attendanceId: null,
+        summaryId: null,
+        history: state.history.map((r) =>
+          r.attendanceId === state.attendanceId
+            ? {
+                ...r,
+                timeOut: { _seconds: Math.floor(now.getTime() / 1000), _nanoseconds: 0 },
+              }
+            : r
+        ),
+      }));
 
-updatePunch: async (id: string, punchIn?: string, punchOut?: string): Promise<{ success: boolean }> => {
-  set({ loading: true, error: null });
-  try {
-    const body: Record<string, string> = {};
-    if (punchIn)  body.punchIn  = punchIn;
-    if (punchOut) body.punchOut = punchOut;
+      get().stopTimer();
 
-    await axios.put(`admin/update/${id}`, body);
-    get().AdminAttendance();
+      // Fetch real computed values from server
+      await get().fetchAttendance();
 
-    set({ loading: false });
-    return { success: true };
-  } catch (error: any) {
-    set({
-      loading: false,
-      error: error.response?.data?.message ?? "Failed to update punch",
-    });
-    return { success: false };
-  }
-},
+      return { success: true };
+
+    } catch (error: any) {
+      set({ loading: false, error: error.response?.data?.message ?? "Punch-out failed" });
+      return { success: false };
+    }
+  },
+
+  fetchAttendance: async (): Promise<void> => {
+    set({ loading: true, error: null });
+    try {
+      const res = await axios.get('attendance/user-attendance');
+      const today = new Date().toISOString().split("T")[0];
+
+      const all: AttendanceRecord[] = res.data.data;
+
+      const todayRecords = all
+        .filter(r => r.date === today)
+        .sort((a, b) => (b.timeIn?._seconds ?? 0) - (a.timeIn?._seconds ?? 0));
+
+      const active = todayRecords.find(r => !r.timeOut);
+
+      set({
+        loading: false,
+        history: todayRecords,
+        isClockedIn: !!active,
+        attendanceId: active?.attendanceId ?? null,
+        summaryId: active?.id ?? null,
+        lateMinutes: active?.late ?? 0,
+      });
+
+      // Only start timer if not already running
+      if (active?.timeIn && !timerInterval) {
+        const punchInDate = new Date(active.timeIn._seconds * 1000);
+        get().startTimer(punchInDate);
+      }
+
+    } catch (error: any) {
+      set({
+        loading: false,
+        error: error.response?.data?.message ?? "Failed to fetch attendance",
+      });
+    }
+  },
+
+  AdminAttendance: async (): Promise<void> => {
+    set({ loading: true, error: null });
+    try {
+      const res = await axios.get('admin/allattendance');
+      set({ EmployeeAttendance: res.data.data, loading: false });
+    } catch (error: any) {
+      set({
+        loading: false,
+        error: error.response?.data?.message ?? "Failed to fetch all attendance",
+      });
+    }
+  },
+
+  updatePunch: async (id: string, punchIn?: string, punchOut?: string): Promise<{ success: boolean }> => {
+    set({ loading: true, error: null });
+    try {
+      const body: Record<string, string> = {};
+      if (punchIn)  body.punchIn  = punchIn;
+      if (punchOut) body.punchOut = punchOut;
+
+      await axios.put(`admin/update/${id}`, body);
+      get().AdminAttendance();
+
+      set({ loading: false });
+      return { success: true };
+    } catch (error: any) {
+      set({
+        loading: false,
+        error: error.response?.data?.message ?? "Failed to update punch",
+      });
+      return { success: false };
+    }
+  },
 
   clearError: () => set({ error: null }),
 }));

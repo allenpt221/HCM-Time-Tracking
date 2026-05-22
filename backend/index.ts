@@ -36,8 +36,6 @@ app.use('/api/admin', AdminRoutes);
 
 const frontendPath = path.join(__dirname, '../frontend/dist')
 app.use(express.static(frontendPath));
-console.log(frontendPath)
-
 app.get(/^\/(?!api).*/, (_req: Request, res: Response) => {
 res.sendFile(path.resolve(frontendPath, 'index.html'));
 });

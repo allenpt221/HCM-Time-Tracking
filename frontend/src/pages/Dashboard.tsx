@@ -64,7 +64,8 @@ export default function Dashboard() {
 
   const [punches, setPunches] = useState<Punch[]>([])
   const [showHistory, setShowHistory] = useState(false)
-  const [showEarlyAlert, setShowEarlyAlert] = useState(false)
+  const [showPunchAlert, setShowPunchAlert] = useState(false)
+  const [punchAlertType, setPunchAlertType] = useState<'too-early' | 'too-late'>('too-early')
 
   useEffect(() => {
     fetchAttendance()
@@ -80,34 +81,40 @@ export default function Dashboard() {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setShowHistory(false)
-        setShowEarlyAlert(false)
+        setShowPunchAlert(false)
       }
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
   }, [])
 
+  const shiftStart = user?.schedule?.start ?? "09:00"
+  const shiftEnd   = user?.schedule?.end   ?? "18:00"
+
   async function handlePunchIn() {
     if (isClockedIn) return
 
     const now = new Date()
-    const [shiftH, shiftM] = shiftStart.split(":").map(Number)
-    const shiftStartMinutes = shiftH * 60 + shiftM
     const currentMinutes = now.getHours() * 60 + now.getMinutes()
 
+    const [startH, startM] = shiftStart.split(":").map(Number)
+    const shiftStartMinutes = startH * 60 + startM
+
+    const [endH, endM] = shiftEnd.split(":").map(Number)
+    const shiftEndMinutes = endH * 60 + endM
+
     if (currentMinutes < shiftStartMinutes) {
-      setShowEarlyAlert(true)
+      setPunchAlertType('too-early')
+      setShowPunchAlert(true)
       return
     }
 
-    const result = await punchIn()
-    if (result.success) {
-      setPunches(prev => [...prev, { type: "in", time: new Date() }])
+    if (currentMinutes >= shiftEndMinutes) {
+      setPunchAlertType('too-late')
+      setShowPunchAlert(true)
+      return
     }
-  }
 
-  async function confirmEarlyPunchIn() {
-    setShowEarlyAlert(false)
     const result = await punchIn()
     if (result.success) {
       setPunches(prev => [...prev, { type: "in", time: new Date() }])
@@ -121,9 +128,6 @@ export default function Dashboard() {
       setPunches(prev => [...prev, { type: "out", time: new Date() }])
     }
   }
-
-  const shiftStart = user?.schedule?.start ?? "09:00"
-  const shiftEnd   = user?.schedule?.end   ?? "18:00"
 
   const sinceLabel = isClockedIn && punchInTime
     ? punchInTime.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
@@ -279,18 +283,20 @@ export default function Dashboard() {
 
       </div>
 
-    <PunchInAlert
-      show={showEarlyAlert}
-      shiftStart={shiftStart}
-      onClose={() => setShowEarlyAlert(false)}
-    />
+      <PunchInAlert
+        show={showPunchAlert}
+        alertType={punchAlertType}
+        shiftStart={shiftStart}
+        shiftEnd={shiftEnd}
+        onClose={() => setShowPunchAlert(false)}
+      />
 
-    {/* History Modal */}
-    <AttendanceHistoryModal
-      show={showHistory}
-      historyRows={historyRows}
-      onClose={() => setShowHistory(false)}
-    />
+      {/* History Modal */}
+      <AttendanceHistoryModal
+        show={showHistory}
+        historyRows={historyRows}
+        onClose={() => setShowHistory(false)}
+      />
     </div>
   )
 }
