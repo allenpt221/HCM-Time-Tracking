@@ -226,7 +226,6 @@ export const attendanceStore = create<AttendanceState>()((set, get) => ({
     } catch (error: any) {
       set({
         loading: false,
-        error: error.response?.data?.message ?? "Failed to fetch all attendance",
       });
     }
   },
