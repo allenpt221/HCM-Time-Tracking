@@ -40,7 +40,7 @@ interface AuthProps {
     SignUp:(data: SignupProps) => Promise<Result>;
     LogIn: (data: LoginProps) => Promise<Result>;
     checkAuth: () => Promise<void>;
-    LogOut: () => Promise<void>;
+    SignOut: () => Promise<void>;
     clearError: () => void;
 }
 
@@ -120,7 +120,7 @@ export const authStore = create<AuthProps>((set) => ({
         }
     },
 
-    LogOut: async (): Promise<void> => {
+    SignOut: async (): Promise<void> => {
         try {
             await axios.post('/auth/signout')
             set({ user: null, justLoggedIn: false, error: null })

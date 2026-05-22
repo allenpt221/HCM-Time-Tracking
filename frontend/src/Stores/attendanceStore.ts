@@ -16,6 +16,28 @@ interface AttendanceRecord {
   totalHours: number;
 }
 
+interface AdminAttendanceRecord {
+  id: string;
+  userId: string;
+  attendanceId: string;
+  date: string;
+  timeIn: { _seconds: number; _nanoseconds: number } | null;
+  timeOut: { _seconds: number; _nanoseconds: number } | null;
+  late: number;
+  regularHours: number;
+  overtime: number;
+  undertime: number;
+  nightDifferential: number;
+  totalHours: number;
+  user: {
+    name: string;
+    email: string;
+    role: string;
+    schedule?: { start: string; end: string };  // ← add this
+  } | null;
+}
+
+
 interface PunchOutResult {
   regularHours: number;
   totalHours: number;
@@ -35,13 +57,16 @@ interface AttendanceState {
   history: AttendanceRecord[];
   elapsed: number;
   punchInTime: Date | null;
-
+  EmployeeAttendance: AdminAttendanceRecord[] | null;
+  
   punchIn: () => Promise<{ success: boolean }>;
   punchOut: () => Promise<{ success: boolean }>;
   fetchAttendance: () => Promise<void>;
   clearError: () => void;
   startTimer: (from: Date) => void;
   stopTimer: () => void;
+  AdminAttendance: () => void;
+  updatePunch: (id: string, punchIn?: string, punchOut?: string) => Promise<{ success: boolean }>;
 }
 
 let timerInterval: ReturnType<typeof setInterval> | null = null;
@@ -57,6 +82,7 @@ export const attendanceStore = create<AttendanceState>()((set, get) => ({
   history: [],
   elapsed: 0,
   punchInTime: null,
+  EmployeeAttendance: null,
 
   startTimer: (from: Date) => {
     if (timerInterval) clearInterval(timerInterval);
@@ -190,6 +216,40 @@ fetchAttendance: async (): Promise<void> => {
       loading: false,
       error: error.response?.data?.message ?? "Failed to fetch attendance",
     });
+  }
+},
+
+AdminAttendance: async (): Promise<void> => {
+  set({ loading: true, error: null });
+  try {
+    const res = await axios.get('admin/allattendance');
+    set({ EmployeeAttendance: res.data.data, loading: false });
+  } catch (error: any) {
+    set({
+      loading: false,
+      error: error.response?.data?.message ?? "Failed to fetch all attendance",
+    });
+  }
+},
+
+updatePunch: async (id: string, punchIn?: string, punchOut?: string): Promise<{ success: boolean }> => {
+  set({ loading: true, error: null });
+  try {
+    const body: Record<string, string> = {};
+    if (punchIn)  body.punchIn  = punchIn;
+    if (punchOut) body.punchOut = punchOut;
+
+    await axios.patch(`admin/update/${id}`, body);
+    get().AdminAttendance();
+
+    set({ loading: false });
+    return { success: true };
+  } catch (error: any) {
+    set({
+      loading: false,
+      error: error.response?.data?.message ?? "Failed to update punch",
+    });
+    return { success: false };
   }
 },
 
