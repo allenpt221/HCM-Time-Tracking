@@ -239,7 +239,7 @@ updatePunch: async (id: string, punchIn?: string, punchOut?: string): Promise<{ 
     if (punchIn)  body.punchIn  = punchIn;
     if (punchOut) body.punchOut = punchOut;
 
-    await axios.patch(`admin/update/${id}`, body);
+    await axios.put(`admin/update/${id}`, body);
     get().AdminAttendance();
 
     set({ loading: false });

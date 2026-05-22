@@ -133,7 +133,7 @@ function AdminPage() {
 
   return (
     <div className="text-slate-900 font-sans">
-      <div className="max-w-6xl mx-auto px-8 py-9">
+      <div className="max-w-8xl mx-auto px-8 py-9">
 
         {/* Page Header */}
         <div className="flex items-start justify-between mb-7">
@@ -197,10 +197,10 @@ function AdminPage() {
               <table className="w-full border-collapse">
                 <thead>
                   <tr>
-                    {['Employee', 'Schedule', 'Date', 'Regular', 'OT', 'ND', 'Late', 'Undertime', 'Total', ''].map((col, i) => (
+                    {['Employee', 'Schedule', 'Date', 'Time In', 'Time Out', 'Regular', 'OT', 'ND', 'Late', 'Undertime', 'Total', ''].map((col, i) => (
                       <th key={i} className={[
                         'pb-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide border-b border-slate-200 px-3 sticky top-0 bg-white z-10',
-                        i === 8 ? 'text-right' : 'text-left',
+                        i === 10 ? 'text-right' : 'text-left', 
                       ].join(' ')}>
                         {col}
                       </th>
@@ -215,6 +215,14 @@ function AdminPage() {
                         {row.user?.schedule ? `${to12Hour(row.user.schedule.start)} – ${to12Hour(row.user.schedule.end)}` : '—'}
                       </td>
                       <td className="px-3 py-3.5 text-sm text-slate-600">{row.date}</td>
+                      <td className="px-3 py-3.5 text-sm text-slate-600 whitespace-nowrap">
+                        {tsToDisplay(row.timeIn)}
+                      </td>
+                      <td className="px-3 py-3.5 text-sm text-slate-600 whitespace-nowrap">
+                        {row.timeOut
+                          ? tsToDisplay(row.timeOut)
+                          : <span className="inline-flex items-center bg-green-50 text-green-600 rounded px-1.5 py-0.5 text-xs font-semibold">Active</span>}
+                      </td>
                       <td className="px-3 py-3.5 text-sm text-slate-600">{row.regularHours.toFixed(2)}</td>
                       <td className="px-3 py-3.5 text-sm text-slate-600">{row.overtime.toFixed(2)}</td>
                       <td className="px-3 py-3.5 text-sm text-slate-600">
