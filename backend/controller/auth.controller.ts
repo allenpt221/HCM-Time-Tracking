@@ -186,3 +186,24 @@ export async function GetProfile(req: Request, res: Response): Promise<void> {
     });
   }
 }
+
+export async function SignOut(req: Request, res: Response) {
+  try {
+    res.clearCookie("accessToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
+
+    return res.status(200).json({
+      status: true,
+      message: "Logged out successfully",
+    });
+
+  } catch (error: any) {
+    return res.status(500).json({
+      status: false,
+      message: error.message,
+    });
+  }
+}

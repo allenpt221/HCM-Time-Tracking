@@ -4,16 +4,11 @@ import { Timestamp } from "firebase-admin/firestore";
 import { computeAttendance } from "../utils/calculation";
 import { formatMinutesToTime } from "../utils/time";
 
-
-
 export async function punchIn(req: any, res: Response) {
   try {
     const userId = req.user?.uid;
-
-
     const startWork = req.user?.schedule.start;
-
-    console.log(startWork)
+    const timezone = req.user?.timezone;
 
     if (!userId) {
       return res.status(401).json({
@@ -35,17 +30,16 @@ export async function punchIn(req: any, res: Response) {
         message: "Already punched in",
       });
     }
-    
 
     const now = new Date();
+    const localNow = new Date(now.toLocaleString("en-US", { timeZone: timezone }));
+    const localDate = now.toLocaleDateString("en-CA", { timeZone: timezone });
 
-    const inMin = now.getHours() * 60 + now.getMinutes();
+    const inMin = localNow.getHours() * 60 + localNow.getMinutes();
     const shiftStart =
       Number(startWork.split(":")[0]) * 60 +
       Number(startWork.split(":")[1]);
     const lateMinutes = Math.max(0, inMin - shiftStart);
-
-    const nowTimestamp = Timestamp.fromDate(now)
 
     const attendanceRef = await db.collection("attendance").add({
       userId,
@@ -55,17 +49,17 @@ export async function punchIn(req: any, res: Response) {
     });
 
     const summaryRef = await db.collection("summaries").add({
-    userId,
-    attendanceId: attendanceRef.id,
-    date: new Date().toISOString().split("T")[0],
-    timeIn: now,
-    timeOut: null,
-    regularHours: 0,
-    overtime: 0,
-    nightDifferential: 0,
-    late: lateMinutes,
-    undertime: 0,
-    totalHours: 0,
+      userId,
+      attendanceId: attendanceRef.id,
+      date: localDate,
+      timeIn: now,
+      timeOut: null,
+      regularHours: 0,
+      overtime: 0,
+      nightDifferential: 0,
+      late: lateMinutes,
+      undertime: 0,
+      totalHours: 0,
     });
 
     return res.status(201).json({
@@ -84,7 +78,6 @@ export async function punchIn(req: any, res: Response) {
     });
   }
 }
-
 
 export async function punchOut(req: Request, res: Response) {
   try {

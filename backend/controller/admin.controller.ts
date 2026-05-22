@@ -118,8 +118,8 @@ export async function getAllAttendance(req: Request, res: Response) {
         const userMap: Record<string, any> = {};
         userSnaps.forEach((snap) => {
             if (snap.exists) {
-                const { name, email, role } = snap.data() as any;
-                userMap[snap.id] = { name, email, role };
+                const { name, email, role, schedule } = snap.data() as any;
+                userMap[snap.id] = { name, email, role, schedule };
             }
         });
 
