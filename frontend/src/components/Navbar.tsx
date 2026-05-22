@@ -1,12 +1,15 @@
 import { authStore } from "@/Stores/authStore"
 import { Hourglass, LogOut, Menu, X } from "lucide-react"
 import { useState } from "react"
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 function Navbar() {
 
-  const { user } = authStore();
+  const location = useLocation();
+
+  const { user, SignOut } = authStore();
   const [menuOpen, setMenuOpen] = useState(false);
+
 
   const navItems = [{
     item: 'Dashboard',
@@ -34,16 +37,23 @@ function Navbar() {
             </div>
 
             {/* Desktop Nav Items */}
-            <div className="hidden md:flex items-center gap-6">
-              {navItems.map((item, index) => (
-                <Link to={item.href}
+            {user?.role === 'admin' && (
+              <div className="hidden md:flex items-center gap-6">
+                {navItems.map((item, index) => (
+                <Link
+                  to={item.href}
                   key={index}
-                  className="text-gray-600 hover:text-indigo-500 cursor-pointer capitalize transition"
+                  className={`capitalize transition px-3 py-2 rounded-lg ${
+                    location.pathname === item.href
+                      ? "bg-indigo-100 text-indigo-600 font-semibold"
+                      : "text-gray-600 hover:text-indigo-500"
+                  }`}
                 >
                   {item.item}
                 </Link>
               ))}
-            </div>
+              </div>
+            )}
           </div>
 
           {/* Right: User info (desktop) + Burger */}
@@ -55,7 +65,9 @@ function Navbar() {
                 <span className="font-semibold">{user?.email}</span>
                 <span className="text-end text-black/70">{user?.role}</span>
               </div>
-              <button className="p-2 rounded-lg hover:bg-gray-100 transition cursor-pointer border shadow-sm">
+              <button
+              onClick={SignOut}
+              className="p-2 rounded-lg hover:bg-gray-100 transition cursor-pointer border shadow-sm">
                 <LogOut />
               </button>
             </div>
@@ -118,7 +130,9 @@ function Navbar() {
             <span className="font-semibold">{user?.email}</span>
             <span className="text-black/70">{user?.role}</span>
           </div>
-          <button className="p-2 rounded-lg hover:bg-gray-100 transition cursor-pointer">
+          <button
+          onClick={SignOut}
+          className="p-2 rounded-lg hover:bg-gray-100 transition cursor-pointer">
             <LogOut size={18} className=""/>
           </button>
         </div>

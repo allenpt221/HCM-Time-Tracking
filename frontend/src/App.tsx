@@ -6,14 +6,28 @@ import Dashboard from "./pages/Dashboard"
 import Navbar from "./components/Navbar"
 import { authStore } from "./Stores/authStore"
 import SignupPage from "./pages/SignupPage"
+import { attendanceStore } from "./Stores/attendanceStore"
+import AdminPage from "./pages/AdminPage"
 
 function App() {
   const { checkAuth, checkingAuth, user } = authStore()
+  const { fetchAttendance, AdminAttendance, EmployeeAttendance } = attendanceStore();
   const location = useLocation()
 
-  useEffect(() => {
-    checkAuth()
-  }, [checkAuth])
+useEffect(() => {
+  checkAuth();
+}, [])
+
+useEffect(() => {
+  if (!user) return
+
+  if (user.role === 'admin') {
+    AdminAttendance()
+  } else {
+    fetchAttendance()
+  }
+}, [user?.role])
+
 
   if (checkingAuth) {
     return (
@@ -24,7 +38,7 @@ function App() {
   }
 
   // Show navbar only on dashboard
-  const showNavbar = location.pathname === "/dashboard"
+  const showNavbar = location.pathname === "/dashboard" || location.pathname === "/admin";
 
   return (
     <div>
@@ -43,6 +57,11 @@ function App() {
         <Route
           path="/dashboard"
           element={user ? <Dashboard /> : <Navigate to="/" />}
+        />
+
+        <Route
+          path="/admin"
+          element={user?.role === 'admin' ? <AdminPage /> : <Navigate to="/" />}
         />
       </Routes>
     </div>
