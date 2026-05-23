@@ -7,6 +7,8 @@ interface HistoryRow {
   out: string
   regular: string
   ot: string
+  undertime: string;
+  nightDiff: string
   late: string
 }
 
@@ -21,7 +23,7 @@ function AttendanceHistoryModal({ show, historyRows, onClose }: AttendanceHistor
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center p-5 bg-black/40 backdrop-blur-sm"
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[80vh] flex flex-col">
@@ -42,7 +44,7 @@ function AttendanceHistoryModal({ show, historyRows, onClose }: AttendanceHistor
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-100">
-                {["Date", "Punch In", "Punch Out", "Regular", "Overtime", "Late"].map(h => (
+                {["Date", "Punch In", "Punch Out", "Regular", "Overtime", 'Under Time', "Night Diff", "Late"].map(h => (
                   <th key={h} className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wide pb-3 pr-6">{h}</th>
                 ))}
               </tr>
@@ -50,7 +52,7 @@ function AttendanceHistoryModal({ show, historyRows, onClose }: AttendanceHistor
             <tbody>
               {historyRows.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-8 text-center text-sm text-gray-400">No attendance records yet</td>
+                  <td colSpan={7} className="py-8 text-center text-sm text-gray-400">No attendance records yet</td>
                 </tr>
               ) : (
                 historyRows.map((row, i) => (
@@ -60,6 +62,14 @@ function AttendanceHistoryModal({ show, historyRows, onClose }: AttendanceHistor
                     <td className="py-3 pr-6 text-gray-500">{row.out}</td>
                     <td className="py-3 pr-6 text-gray-700">{row.regular}</td>
                     <td className="py-3 pr-6 text-gray-500">{row.ot}</td>
+                    <td className="py-3 pr-6 text-gray-500">{row.undertime}</td>
+                    <td className="py-3 pr-6">
+                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                        row.nightDiff === "0.00 h" ? "bg-gray-50 text-gray-400" : "bg-blue-50 text-blue-600"
+                      }`}>
+                        {row.nightDiff}
+                      </span>
+                    </td>
                     <td className="py-3 pr-6">
                       <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
                         row.late === "0h 00m" ? "bg-green-50 text-green-600" : "bg-amber-50 text-amber-600"

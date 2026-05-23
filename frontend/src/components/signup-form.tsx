@@ -62,6 +62,7 @@ export function SignupForm({
     const result = await SignUp({ name, email, password, startTime, endTime, timezone });
     if (result.success) {
       setShowSuccess(true);
+      setName('');
       setEmail('');
       setPassword('');
       setStartTime('');

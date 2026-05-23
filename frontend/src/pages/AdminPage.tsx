@@ -1,51 +1,9 @@
+import { getWeekEnd, getWeekStart, minutesToTime, to12Hour, tsToDatetimeLocal, tsToDisplay } from '@/lib/time'
 import { attendanceStore } from '@/Stores/attendanceStore'
 import React, { useState, useEffect } from 'react'
 
 const isLateOrUT = (val: number) => val > 0
 const isND = (val: number) => val > 0
-
-const minutesToTime = (minutes: number) => {
-  const h = Math.floor(minutes / 60)
-  const m = minutes % 60
-  return `${h}h ${m}m`
-}
-
-const tsToDatetimeLocal = (ts: { _seconds: number } | null) => {
-  if (!ts) return ''
-  const d = new Date(ts._seconds * 1000)
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
-}
-
-const tsToDisplay = (ts: { _seconds: number } | null) => {
-  if (!ts) return '—'
-  const d = new Date(ts._seconds * 1000)
-  return d.toLocaleString('en-PH', {
-    month: 'short', day: 'numeric', year: 'numeric',
-    hour: 'numeric', minute: '2-digit', hour12: true,
-  })
-}
-
-const to12Hour = (time: string) => {
-  const [h, m] = time.split(':').map(Number)
-  const ampm = h >= 12 ? 'PM' : 'AM'
-  const hour = h % 12 || 12
-  return `${hour}:${String(m).padStart(2, '0')} ${ampm}`
-}
-
-const getWeekStart = (dateStr: string) => {
-  const d = new Date(dateStr)
-  const day = d.getDay()
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1) // Monday
-  d.setDate(diff)
-  return d.toISOString().split('T')[0]
-}
-
-const getWeekEnd = (weekStart: string) => {
-  const d = new Date(weekStart)
-  d.setDate(d.getDate() + 6)
-  return d.toISOString().split('T')[0]
-}
 
 interface EditModal {
   id: string
@@ -93,12 +51,12 @@ function AdminPage() {
       }
     }
 
-    weeklyMap[key].regularHours      += row.regularHours
-    weeklyMap[key].overtime          += row.overtime
-    weeklyMap[key].nightDifferential += row.nightDifferential
-    weeklyMap[key].late              += row.late
-    weeklyMap[key].undertime         += row.undertime
-    weeklyMap[key].totalHours        += row.totalHours
+    weeklyMap[key].regularHours      += row.regularHours      ?? 0
+    weeklyMap[key].overtime          += row.overtime          ?? 0
+    weeklyMap[key].nightDifferential += row.nightDifferential ?? 0
+    weeklyMap[key].late              += row.late              ?? 0
+    weeklyMap[key].undertime         += row.undertime         ?? 0
+    weeklyMap[key].totalHours        += row.totalHours        ?? 0
     weeklyMap[key].days              += 1
   })
 
@@ -192,66 +150,66 @@ function AdminPage() {
                 <div className="py-12 text-center text-sm text-slate-400">No attendance records found.</div>
               )}
 
-          {!loading && !error && filteredRows.length > 0 && (
-            <div className="overflow-auto max-h-72">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr>
-                    {['Employee', 'Schedule', 'Date', 'Time In', 'Time Out', 'Regular', 'OT', 'ND', 'Late', 'Undertime', 'Total', ''].map((col, i) => (
-                      <th key={i} className={[
-                        'pb-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide border-b border-slate-200 px-3 sticky top-0 bg-white z-10',
-                        i === 10 ? 'text-right' : 'text-left', 
-                      ].join(' ')}>
-                        {col}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredRows.map((row, i) => (
-                    <tr key={row.id ?? i} className="border-b border-slate-50 last:border-none hover:bg-slate-50 transition-colors">
-                      <td className="px-3 py-3.5 text-sm font-semibold text-slate-900">{row.user?.name ?? '—'}</td>
-                      <td className="px-3 py-3.5 text-sm text-slate-500 whitespace-nowrap">
-                        {row.user?.schedule ? `${to12Hour(row.user.schedule.start)} – ${to12Hour(row.user.schedule.end)}` : '—'}
-                      </td>
-                      <td className="px-3 py-3.5 text-sm text-slate-600">{row.date}</td>
-                      <td className="px-3 py-3.5 text-sm text-slate-600 whitespace-nowrap">
-                        {tsToDisplay(row.timeIn)}
-                      </td>
-                      <td className="px-3 py-3.5 text-sm text-slate-600 whitespace-nowrap">
-                        {row.timeOut
-                          ? tsToDisplay(row.timeOut)
-                          : <span className="inline-flex items-center bg-green-50 text-green-600 rounded px-1.5 py-0.5 text-xs font-semibold">Active</span>}
-                      </td>
-                      <td className="px-3 py-3.5 text-sm text-slate-600">{row.regularHours.toFixed(2)}</td>
-                      <td className="px-3 py-3.5 text-sm text-slate-600">{row.overtime.toFixed(2)}</td>
-                      <td className="px-3 py-3.5 text-sm text-slate-600">
-                        {isND(row.nightDifferential)
-                          ? <span className="inline-flex items-center bg-blue-50 text-blue-600 rounded px-1.5 py-0.5 text-xs font-semibold">{row.nightDifferential.toFixed(2)}</span>
-                          : row.nightDifferential.toFixed(2)}
-                      </td>
-                      <td className="px-3 py-3.5 text-sm text-slate-600">
-                        {isLateOrUT(row.late)
-                          ? <span className="inline-flex items-center bg-orange-50 text-orange-600 rounded px-1.5 py-0.5 text-xs font-semibold">{minutesToTime(row.late)}</span>
-                          : minutesToTime(row.late)}
-                      </td>
-                      <td className="px-3 py-3.5 text-sm text-slate-600">
-                        {isLateOrUT(row.undertime)
-                          ? <span className="inline-flex items-center bg-orange-50 text-orange-600 rounded px-1.5 py-0.5 text-xs font-semibold">{minutesToTime(row.undertime)}</span>
-                          : minutesToTime(row.undertime)}
-                      </td>
-                      <td className="px-3 py-3.5 text-sm font-bold text-slate-900 text-right">{row.totalHours.toFixed(2)}</td>
-                      <td className="px-3 py-3.5 text-right">
-                        <button onClick={() => openEdit(row)} className="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors cursor-pointer bg-transparent border-none">
-                          Edit
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+              {!loading && !error && filteredRows.length > 0 && (
+                <div className="overflow-auto max-h-72">
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr>
+                        {['Employee', 'Schedule', 'Date', 'Time In', 'Time Out', 'Regular', 'OT', 'ND', 'Late', 'Undertime', 'Total', ''].map((col, i) => (
+                          <th key={i} className={[
+                            'pb-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide border-b border-slate-200 px-3 sticky top-0 bg-white z-10',
+                            i === 10 ? 'text-right' : 'text-left',
+                          ].join(' ')}>
+                            {col}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredRows.map((row, i) => (
+                        <tr key={row.id ?? i} className="border-b border-slate-50 last:border-none hover:bg-slate-50 transition-colors">
+                          <td className="px-3 py-3.5 text-sm font-semibold text-slate-900">{row.user?.name ?? '—'}</td>
+                          <td className="px-3 py-3.5 text-sm text-slate-500 whitespace-nowrap">
+                            {row.user?.schedule ? `${to12Hour(row.user.schedule.start)} – ${to12Hour(row.user.schedule.end)}` : '—'}
+                          </td>
+                          <td className="px-3 py-3.5 text-sm text-slate-600">{row.date}</td>
+                          <td className="px-3 py-3.5 text-sm text-slate-600 whitespace-nowrap">
+                            {tsToDisplay(row.timeIn)}
+                          </td>
+                          <td className="px-3 py-3.5 text-sm text-slate-600 whitespace-nowrap">
+                            {row.timeOut
+                              ? tsToDisplay(row.timeOut)
+                              : <span className="inline-flex items-center bg-green-50 text-green-600 rounded px-1.5 py-0.5 text-xs font-semibold">Active</span>}
+                          </td>
+                          <td className="px-3 py-3.5 text-sm text-slate-600">{(row.regularHours ?? 0).toFixed(2)}</td>
+                          <td className="px-3 py-3.5 text-sm text-slate-600">{(row.overtime ?? 0).toFixed(2)}</td>
+                          <td className="px-3 py-3.5 text-sm text-slate-600">
+                            {isND(row.nightDifferential ?? 0)
+                              ? <span className="inline-flex items-center bg-blue-50 text-blue-600 rounded px-1.5 py-0.5 text-xs font-semibold">{(row.nightDifferential ?? 0).toFixed(2)}</span>
+                              : (row.nightDifferential ?? 0).toFixed(2)}
+                          </td>
+                          <td className="px-3 py-3.5 text-sm text-slate-600">
+                            {isLateOrUT(row.late ?? 0)
+                              ? <span className="inline-flex items-center bg-orange-50 text-orange-600 rounded px-1.5 py-0.5 text-xs font-semibold">{minutesToTime(row.late ?? 0)}</span>
+                              : minutesToTime(row.late ?? 0)}
+                          </td>
+                          <td className="px-3 py-3.5 text-sm text-slate-600">
+                            {isLateOrUT(row.undertime ?? 0)
+                              ? <span className="inline-flex items-center bg-orange-50 text-orange-600 rounded px-1.5 py-0.5 text-xs font-semibold">{minutesToTime(row.undertime ?? 0)}</span>
+                              : minutesToTime(row.undertime ?? 0)}
+                          </td>
+                          <td className="px-3 py-3.5 text-sm font-bold text-slate-900 text-right">{(row.totalHours ?? 0).toFixed(2)}</td>
+                          <td className="px-3 py-3.5 text-right">
+                            <button onClick={() => openEdit(row)} className="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors cursor-pointer bg-transparent border-none">
+                              Edit
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </>
           )}
 
@@ -267,56 +225,56 @@ function AdminPage() {
                 <div className="py-12 text-center text-sm text-slate-400">No attendance records found.</div>
               )}
 
-          {!loading && !error && weeklyRows.length > 0 && (
-            <div className="overflow-auto max-h-72">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr>
-                    {['Employee', 'Schedule', 'Week', 'Days', 'Regular', 'OT', 'ND', 'Late', 'Undertime', 'Total'].map((col, i) => (
-                      <th key={i} className={[
-                        'pb-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide border-b border-slate-200 px-3 sticky top-0 bg-white z-10',
-                        i === 9 ? 'text-right' : 'text-left',
-                      ].join(' ')}>
-                        {col}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {weeklyRows.map((row, i) => (
-                    <tr key={i} className="border-b border-slate-50 last:border-none hover:bg-slate-50 transition-colors">
-                      <td className="px-3 py-3.5 text-sm font-semibold text-slate-900">{row.employee}</td>
-                      <td className="px-3 py-3.5 text-sm text-slate-500 whitespace-nowrap">
-                        {row.schedule ? `${to12Hour(row.schedule.start)} – ${to12Hour(row.schedule.end)}` : '—'}
-                      </td>
-                      <td className="px-3 py-3.5 text-sm text-slate-600 whitespace-nowrap">
-                        {row.weekStart} – {row.weekEnd}
-                      </td>
-                      <td className="px-3 py-3.5 text-sm text-slate-600">{row.days}</td>
-                      <td className="px-3 py-3.5 text-sm text-slate-600">{row.regularHours.toFixed(2)}</td>
-                      <td className="px-3 py-3.5 text-sm text-slate-600">{row.overtime.toFixed(2)}</td>
-                      <td className="px-3 py-3.5 text-sm text-slate-600">
-                        {isND(row.nightDifferential)
-                          ? <span className="inline-flex items-center bg-blue-50 text-blue-600 rounded px-1.5 py-0.5 text-xs font-semibold">{row.nightDifferential.toFixed(2)}</span>
-                          : row.nightDifferential.toFixed(2)}
-                      </td>
-                      <td className="px-3 py-3.5 text-sm text-slate-600">
-                        {isLateOrUT(row.late)
-                          ? <span className="inline-flex items-center bg-orange-50 text-orange-600 rounded px-1.5 py-0.5 text-xs font-semibold">{minutesToTime(row.late)}</span>
-                          : minutesToTime(row.late)}
-                      </td>
-                      <td className="px-3 py-3.5 text-sm text-slate-600">
-                        {isLateOrUT(row.undertime)
-                          ? <span className="inline-flex items-center bg-orange-50 text-orange-600 rounded px-1.5 py-0.5 text-xs font-semibold">{minutesToTime(row.undertime)}</span>
-                          : minutesToTime(row.undertime)}
-                      </td>
-                      <td className="px-3 py-3.5 text-sm font-bold text-slate-900 text-right">{row.totalHours.toFixed(2)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+              {!loading && !error && weeklyRows.length > 0 && (
+                <div className="overflow-auto max-h-72">
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr>
+                        {['Employee', 'Schedule', 'Week', 'Days', 'Regular', 'OT', 'ND', 'Late', 'Undertime', 'Total'].map((col, i) => (
+                          <th key={i} className={[
+                            'pb-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide border-b border-slate-200 px-3 sticky top-0 bg-white z-10',
+                            i === 9 ? 'text-right' : 'text-left',
+                          ].join(' ')}>
+                            {col}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {weeklyRows.map((row, i) => (
+                        <tr key={i} className="border-b border-slate-50 last:border-none hover:bg-slate-50 transition-colors">
+                          <td className="px-3 py-3.5 text-sm font-semibold text-slate-900">{row.employee}</td>
+                          <td className="px-3 py-3.5 text-sm text-slate-500 whitespace-nowrap">
+                            {row.schedule ? `${to12Hour(row.schedule.start)} – ${to12Hour(row.schedule.end)}` : '—'}
+                          </td>
+                          <td className="px-3 py-3.5 text-sm text-slate-600 whitespace-nowrap">
+                            {row.weekStart} – {row.weekEnd}
+                          </td>
+                          <td className="px-3 py-3.5 text-sm text-slate-600">{row.days}</td>
+                          <td className="px-3 py-3.5 text-sm text-slate-600">{(row.regularHours ?? 0).toFixed(2)}</td>
+                          <td className="px-3 py-3.5 text-sm text-slate-600">{(row.overtime ?? 0).toFixed(2)}</td>
+                          <td className="px-3 py-3.5 text-sm text-slate-600">
+                            {isND(row.nightDifferential ?? 0)
+                              ? <span className="inline-flex items-center bg-blue-50 text-blue-600 rounded px-1.5 py-0.5 text-xs font-semibold">{(row.nightDifferential ?? 0).toFixed(2)}</span>
+                              : (row.nightDifferential ?? 0).toFixed(2)}
+                          </td>
+                          <td className="px-3 py-3.5 text-sm text-slate-600">
+                            {isLateOrUT(row.late ?? 0)
+                              ? <span className="inline-flex items-center bg-orange-50 text-orange-600 rounded px-1.5 py-0.5 text-xs font-semibold">{minutesToTime(row.late ?? 0)}</span>
+                              : minutesToTime(row.late ?? 0)}
+                          </td>
+                          <td className="px-3 py-3.5 text-sm text-slate-600">
+                            {isLateOrUT(row.undertime ?? 0)
+                              ? <span className="inline-flex items-center bg-orange-50 text-orange-600 rounded px-1.5 py-0.5 text-xs font-semibold">{minutesToTime(row.undertime ?? 0)}</span>
+                              : minutesToTime(row.undertime ?? 0)}
+                          </td>
+                          <td className="px-3 py-3.5 text-sm font-bold text-slate-900 text-right">{(row.totalHours ?? 0).toFixed(2)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </>
           )}
 
@@ -332,44 +290,44 @@ function AdminPage() {
                 <div className="py-12 text-center text-sm text-slate-400">No punch records found.</div>
               )}
 
-            {!loading && !error && filteredRows.length > 0 && (
-              <div className="overflow-auto max-h-72">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr>
-                      {['Employee', 'Date', 'Punch In', 'Punch Out', 'Total', ''].map((col, i) => (
-                        <th key={i} className={[
-                          'pb-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide border-b border-slate-200 px-3 sticky top-0 bg-white z-10',
-                          i === 4 ? 'text-right' : 'text-left',
-                        ].join(' ')}>
-                          {col}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredRows.map((row, i) => (
-                      <tr key={row.id ?? i} className="border-b border-slate-50 last:border-none hover:bg-slate-50 transition-colors">
-                        <td className="px-3 py-3.5 text-sm font-semibold text-slate-900">{row.user?.name ?? '—'}</td>
-                        <td className="px-3 py-3.5 text-sm text-slate-600">{row.date}</td>
-                        <td className="px-3 py-3.5 text-sm text-slate-600 whitespace-nowrap">{tsToDisplay(row.timeIn)}</td>
-                        <td className="px-3 py-3.5 text-sm text-slate-600 whitespace-nowrap">
-                          {row.timeOut
-                            ? tsToDisplay(row.timeOut)
-                            : <span className="inline-flex items-center bg-green-50 text-green-600 rounded px-1.5 py-0.5 text-xs font-semibold">Active</span>}
-                        </td>
-                        <td className="px-3 py-3.5 text-sm font-bold text-slate-900 text-right">{row.totalHours.toFixed(2)}</td>
-                        <td className="px-3 py-3.5 text-right">
-                          <button onClick={() => openEdit(row)} className="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors cursor-pointer bg-transparent border-none">
-                            Edit
-                          </button>
-                        </td>
+              {!loading && !error && filteredRows.length > 0 && (
+                <div className="overflow-auto max-h-72">
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr>
+                        {['Employee', 'Date', 'Punch In', 'Punch Out', 'Total', ''].map((col, i) => (
+                          <th key={i} className={[
+                            'pb-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide border-b border-slate-200 px-3 sticky top-0 bg-white z-10',
+                            i === 4 ? 'text-right' : 'text-left',
+                          ].join(' ')}>
+                            {col}
+                          </th>
+                        ))}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+                    </thead>
+                    <tbody>
+                      {filteredRows.map((row, i) => (
+                        <tr key={row.id ?? i} className="border-b border-slate-50 last:border-none hover:bg-slate-50 transition-colors">
+                          <td className="px-3 py-3.5 text-sm font-semibold text-slate-900">{row.user?.name ?? '—'}</td>
+                          <td className="px-3 py-3.5 text-sm text-slate-600">{row.date}</td>
+                          <td className="px-3 py-3.5 text-sm text-slate-600 whitespace-nowrap">{tsToDisplay(row.timeIn)}</td>
+                          <td className="px-3 py-3.5 text-sm text-slate-600 whitespace-nowrap">
+                            {row.timeOut
+                              ? tsToDisplay(row.timeOut)
+                              : <span className="inline-flex items-center bg-green-50 text-green-600 rounded px-1.5 py-0.5 text-xs font-semibold">Active</span>}
+                          </td>
+                          <td className="px-3 py-3.5 text-sm font-bold text-slate-900 text-right">{(row.totalHours ?? 0).toFixed(2)}</td>
+                          <td className="px-3 py-3.5 text-right">
+                            <button onClick={() => openEdit(row)} className="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors cursor-pointer bg-transparent border-none">
+                              Edit
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </>
           )}
 

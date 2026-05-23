@@ -119,6 +119,8 @@ export default function Dashboard() {
       out:     timeOutDate ? timeOutDate.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }) : "Active",
       regular: `${(record.regularHours ?? 0).toFixed(1)}h`,
       ot:      `${((record.overtime ?? 0) / 60).toFixed(1)}h`,
+      undertime:      `${((record.undertime ?? 0) / 60).toFixed(1)}h`,
+      nightDiff: `${(record.nightDifferential ?? 0).toFixed(2)} h`,
       late:    formatHM((record.late ?? 0) * 60),
     }
   })

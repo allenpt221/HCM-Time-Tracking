@@ -102,12 +102,7 @@ export function LoginForm({
 
               {/* Password */}
               <Field>
-                <div className="flex items-center justify-between">
                   <FieldLabel htmlFor="password">Password</FieldLabel>
-                  <a href="#" className="text-xs text-muted-foreground hover:text-primary underline-offset-2 hover:underline">
-                    Forgot your password?
-                  </a>
-                </div>
                 <div className="relative">
                   <Input
                     id="password"
