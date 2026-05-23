@@ -33,20 +33,23 @@ interface SignupProps {
 
 interface AuthProps {
     user: UserProps | null;
+    users: UserProps[];
     loading: boolean;
     checkingAuth: boolean;
     justLoggedIn: boolean;
     error: string | null;
-    SignUp:(data: SignupProps) => Promise<Result>;
+    SignUp: (data: SignupProps) => Promise<Result>;
     LogIn: (data: LoginProps) => Promise<Result>;
     checkAuth: () => Promise<void>;
     SignOut: () => Promise<void>;
     clearError: () => void;
     setJustLoggedIn: (value: boolean) => void;
+    getUsers: () => Promise<void>;
 }
 
 export const authStore = create<AuthProps>((set) => ({
     user: null,
+    users: [],
     loading: false,
     checkingAuth: true,
     justLoggedIn: false,
@@ -58,7 +61,6 @@ export const authStore = create<AuthProps>((set) => ({
         try {
             await axios.post('/auth/signin', { email, password })
 
-            // fetch full profile after login to get complete user with schedule
             const profile = await axios.get('/auth/profile')
             set({ user: profile.data.data, loading: false, justLoggedIn: true })
 
@@ -66,34 +68,31 @@ export const authStore = create<AuthProps>((set) => ({
 
         } catch (error: any) {
             const rawMessage = error.response?.data?.message || "Invalid credentials"
-            
-            const message = rawMessage.includes("INVALID_LOGIN_CREDENTIALS") 
-            ? "Invalid credentials" 
-            : rawMessage
+
+            const message = rawMessage.includes("INVALID_LOGIN_CREDENTIALS")
+                ? "Invalid credentials"
+                : rawMessage
 
             set({ loading: false, error: message })
             return { success: false, message }
         }
     },
 
-    SignUp: async({ name, email, password, startTime, endTime, timezone }: SignupProps): Promise<Result> => {
+    SignUp: async ({ name, email, password, startTime, endTime, timezone }: SignupProps): Promise<Result> => {
         set({ loading: true, error: null });
         try {
             await axios.post('/auth/signup', {
                 name,
                 email,
                 password,
-                schedule:{
+                schedule: {
                     start: startTime,
                     end: endTime,
                 },
                 timezone
             });
 
-            set({
-                loading: false,
-                justLoggedIn: false
-            });
+            set({ loading: false, justLoggedIn: false });
 
             return {
                 success: true,
@@ -101,18 +100,11 @@ export const authStore = create<AuthProps>((set) => ({
             };
 
         } catch (error: any) {
-            const message =
-                error.response?.data?.message || "Signup failed";
+            const message = error.response?.data?.message || "Signup failed";
 
-            set({
-                loading: false,
-                error: message
-            });
+            set({ loading: false, error: message });
 
-            return {
-                success: false,
-                message
-            };
+            return { success: false, message };
         }
     },
 
@@ -136,4 +128,13 @@ export const authStore = create<AuthProps>((set) => ({
     },
 
     clearError: () => set({ error: null }),
+
+    getUsers: async (): Promise<void> => {
+        try {
+            const res = await axios.get('/admin/users')
+            set({ users: res.data.data })
+        } catch {
+            set({ users: [] })
+        }
+    },
 }))

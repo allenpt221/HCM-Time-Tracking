@@ -207,3 +207,32 @@ export async function SignOut(req: Request, res: Response) {
     });
   }
 }
+
+export async function GetAllUsers(req: Request, res: Response): Promise<void> {
+  try {
+    const snapshot = await db.collection("users").get()
+
+    const users = snapshot.docs
+      .map(doc => doc.data() as UserDocument)
+      .filter(data => data.role !== 'admin')
+      .map(data => ({
+        id:       data.uid,
+        name:     data.name,
+        email:    data.email,
+        role:     data.role,
+        schedule: data.schedule,
+      }))
+
+    res.status(200).json({
+      status: true,
+      message: "Users retrieved successfully",
+      data: users,
+    })
+
+  } catch (error: any) {
+    res.status(500).json({
+      status:  false,
+      message: error.message,
+    })
+  }
+}

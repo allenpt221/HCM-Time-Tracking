@@ -1,3 +1,4 @@
+import { AdminKPI } from '@/components/AdminKPI'
 import { getWeekEnd, getWeekStart, minutesToTime, to12Hour, tsToDatetimeLocal, tsToDisplay } from '@/lib/time'
 import { attendanceStore } from '@/Stores/attendanceStore'
 import React, { useState, useEffect } from 'react'
@@ -116,6 +117,9 @@ function AdminPage() {
             </div>
           </div>
         </div>
+
+
+        <AdminKPI />
 
         {/* Tabs */}
         <div className="flex gap-0.5 border-b border-slate-200 mb-5">
