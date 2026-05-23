@@ -4,13 +4,6 @@ import { Timestamp } from "firebase-admin/firestore";
 import { computeAttendance } from "../utils/calculation.js";
 import { formatMinutesToTime } from "../utils/time.js";
 
-function parseTime(dateStr: string, timeStr: string): Date {
-  const [year, month, day] = dateStr.split("-").map(Number);
-  const [hour, minute] = timeStr.split(":").map(Number);
-
-  return new Date(year, month - 1, day, hour, minute, 0);
-}
-
 function getLocalDate(time: Date, timezone: string): string {
   return new Intl.DateTimeFormat("en-CA", {
     timeZone: timezone,
@@ -64,13 +57,13 @@ export async function punchIn(req: any, res: Response) {
     const now = new Date();
     const localDate = getLocalDate(now, timezone);
 
-    const shiftStart = parseTime(localDate, schedule.start);
+    const [shiftHour, shiftMinute] = schedule.start.split(":").map(Number);
 
-    const lateMinutes = Math.max(
-      0,
-      (now.getTime() - shiftStart.getTime()) / 60000
-    );
+    const nowInUserTZ = new Date(now.toLocaleString("en-US", { timeZone: timezone }));
+    const shiftStart  = new Date(nowInUserTZ);
+    shiftStart.setHours(shiftHour, shiftMinute, 0, 0);
 
+    const lateMinutes = Math.max(0, (nowInUserTZ.getTime() - shiftStart.getTime()) / 60000);
     const late = Math.floor(lateMinutes);
 
     const attendanceRef = await db.collection("attendance").add({
@@ -147,7 +140,7 @@ export async function punchOut(req: Request, res: Response) {
       });
     }
 
-    const timeIn = data.punchIn.toDate();
+    const timeIn  = data.punchIn.toDate();
     const timeOut = new Date();
 
     const userSnap = await db.collection("users").doc(userId).get();
@@ -160,7 +153,6 @@ export async function punchOut(req: Request, res: Response) {
     }
 
     const schedule = userSnap.data()?.schedule;
-
     const timezone = userSnap.data()?.timezone;
 
     if (!schedule?.start || !schedule?.end || !timezone) {
@@ -173,18 +165,18 @@ export async function punchOut(req: Request, res: Response) {
     const result = computeAttendance(timeIn, timeOut, schedule, timezone);
 
     const safe = {
-      totalHours: Number(result.totalHours ?? 0),
+      totalHours:   Number(result.totalHours   ?? 0),
       regularHours: Number(result.regularHours ?? 0),
-      overtime: Math.max(0, Number(result.overtime ?? 0)),
-      undertime: Math.max(0, Number(result.undertime ?? 0)),
-      late: Math.max(0, Number(result.late ?? 0)),
+      overtime:     Math.max(0, Number(result.overtime  ?? 0)),
+      undertime:    Math.max(0, Number(result.undertime ?? 0)),
+      late:         Math.max(0, Number(result.late      ?? 0)),
     };
 
     const formattedResult = {
       ...safe,
       undertime: formatMinutesToTime(safe.undertime),
-      late: formatMinutesToTime(safe.late),
-      overtime: formatMinutesToTime(safe.overtime),
+      late:      formatMinutesToTime(safe.late),
+      overtime:  formatMinutesToTime(safe.overtime),
     };
 
     const summarySnap = await db
@@ -215,11 +207,11 @@ export async function punchOut(req: Request, res: Response) {
       status: true,
       message: "Punched out successfully",
       data: formattedResult,
-      time: schedule
+      time: schedule,
     });
   } catch (error: any) {
     return res.status(500).json({
-      status: false,
+      success: false,
       message: error.message,
     });
   }
