@@ -25,7 +25,7 @@ export function LoginForm({
   const [showPassword, setShowPassword] = useState(false);
   const [visible, setVisible] = useState(false);
   const [fadingOut, setFadingOut] = useState(false);
-  const { LogIn, loading, error, clearError } = authStore()
+  const { LogIn, loading, error, clearError, user } = authStore()
 
   useEffect(() => {
     if (error) {
@@ -49,9 +49,14 @@ export function LoginForm({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const result = await LogIn({ email, password });
-    if (result.success) {
-      navigate('/dashboard');
-    }
+      if (result.success) {
+        const { user } = authStore.getState();
+        if (user?.role === 'admin') {
+          navigate('/admin');
+        } else {
+          navigate('/dashboard');
+        }
+      }
   }
 
   return (
