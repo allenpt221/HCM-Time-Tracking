@@ -49,9 +49,9 @@ export async function updatePunch(req: Request, res: Response) {
         }
 
         const schedule = userSnap.data()?.schedule;
+        const timezone = userSnap.data()?.timezone
 
-        // Recompute attendance metrics
-        const result = computeAttendance(timeIn, timeOut, schedule);
+        const result = computeAttendance(timeIn, timeOut, schedule, timezone);
 
         // Update attendance
         await docRef.update(updateData);
