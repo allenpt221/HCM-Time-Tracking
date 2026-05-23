@@ -1,9 +1,8 @@
-
 interface PunchInAlertProps {
   show: boolean
   shiftStart: string
   shiftEnd?: string
-  alertType?: 'too-early' | 'too-late'
+  alertType?: 'too-early' | 'shift-ended'
   onClose: () => void
 }
 
@@ -17,7 +16,7 @@ function to12Hour(time: string) {
 function PunchInAlert({ show, shiftStart, shiftEnd, alertType = 'too-early', onClose }: PunchInAlertProps) {
   if (!show) return null
 
-  const isTooLate = alertType === 'too-late'
+  const isShiftEnded = alertType === 'shift-ended'
 
   return (
     <div
@@ -27,8 +26,8 @@ function PunchInAlert({ show, shiftStart, shiftEnd, alertType = 'too-early', onC
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
 
         {/* Icon */}
-        <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 ${isTooLate ? 'bg-red-50' : 'bg-amber-50'}`}>
-          {isTooLate ? (
+        <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 ${isShiftEnded ? 'bg-red-50' : 'bg-amber-50'}`}>
+          {isShiftEnded ? (
             <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
             </svg>
@@ -41,14 +40,14 @@ function PunchInAlert({ show, shiftStart, shiftEnd, alertType = 'too-early', onC
 
         {/* Title & description */}
         <h3 className="text-center font-bold text-gray-800 text-base mb-1">
-          {isTooLate ? 'Punch-in no longer available' : 'Not yet time to punch in'}
+          {isShiftEnded ? 'Shift has ended' : 'Not yet time to punch in'}
         </h3>
         <p className="text-center text-sm text-gray-400 mb-5 leading-relaxed">
-          {isTooLate ? (
+          {isShiftEnded ? (
             <>
-              Your shift ended at{" "}
+              Your shift has already ended at{" "}
               <span className="font-semibold text-gray-600">{shiftEnd ? to12Hour(shiftEnd) : '—'}</span>.
-              {" "}Punch-in is only allowed during your active shift window.
+              {" "}Please contact your administrator if you need to log attendance.
             </>
           ) : (
             <>
@@ -67,7 +66,7 @@ function PunchInAlert({ show, shiftStart, shiftEnd, alertType = 'too-early', onC
             </span>
           </div>
           <div className="w-px bg-gray-200" />
-          {isTooLate ? (
+          {isShiftEnded ? (
             <div className="flex flex-col gap-0.5 items-end">
               <span className="text-xs text-gray-400 uppercase tracking-wide">Shift ended</span>
               <span className="text-sm font-semibold text-red-400">{shiftEnd ? to12Hour(shiftEnd) : '—'}</span>
@@ -83,9 +82,7 @@ function PunchInAlert({ show, shiftStart, shiftEnd, alertType = 'too-early', onC
         <button
           onClick={onClose}
           className={`w-full h-10 rounded-xl text-white text-sm font-semibold active:scale-[0.98] transition-all ${
-            isTooLate
-              ? 'bg-red-500 hover:bg-red-600'
-              : 'bg-indigo-500 hover:bg-indigo-600'
+            isShiftEnded ? 'bg-red-500 hover:bg-red-600' : 'bg-indigo-500 hover:bg-indigo-600'
           }`}
         >
           Got it

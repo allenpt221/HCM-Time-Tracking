@@ -11,7 +11,7 @@ import AdminPage from "./pages/AdminPage"
 
 function App() {
   const { checkAuth, checkingAuth, user } = authStore()
-  const { fetchAttendance, AdminAttendance, EmployeeAttendance } = attendanceStore();
+  const { fetchAttendance, AdminAttendance } = attendanceStore();
   const location = useLocation()
 
 useEffect(() => {
@@ -26,7 +26,7 @@ useEffect(() => {
   } else {
     fetchAttendance()
   }
-}, [user?.role])
+}, [user])
 
 
   if (checkingAuth) {

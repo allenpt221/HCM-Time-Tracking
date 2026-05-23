@@ -42,6 +42,7 @@ interface AuthProps {
     checkAuth: () => Promise<void>;
     SignOut: () => Promise<void>;
     clearError: () => void;
+    setJustLoggedIn: (value: boolean) => void;
 }
 
 export const authStore = create<AuthProps>((set) => ({
@@ -50,12 +51,17 @@ export const authStore = create<AuthProps>((set) => ({
     checkingAuth: true,
     justLoggedIn: false,
     error: null,
+    setJustLoggedIn: (value) => set({ justLoggedIn: value }),
 
     LogIn: async ({ email, password }: LoginProps): Promise<Result> => {
         set({ loading: true, error: null })
         try {
-            const res = await axios.post('/auth/signin', { email, password })
-            set({ user: res.data.data, loading: false, justLoggedIn: true })
+            await axios.post('/auth/signin', { email, password })
+
+            // fetch full profile after login to get complete user with schedule
+            const profile = await axios.get('/auth/profile')
+            set({ user: profile.data.data, loading: false, justLoggedIn: true })
+
             return { success: true }
 
         } catch (error: any) {

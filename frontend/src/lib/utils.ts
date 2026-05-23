@@ -7,26 +7,33 @@ export function cn(...inputs: ClassValue[]) {
 
 
 export const TIMEZONES = [
-  { label: "Asia/Manila — PHT (UTC+8)",        value: "Asia/Manila" },
-  { label: "Asia/Singapore — SGT (UTC+8)",     value: "Asia/Singapore" },
-  { label: "Asia/Kuala_Lumpur — MYT (UTC+8)",  value: "Asia/Kuala_Lumpur" },
-  { label: "Asia/Hong_Kong — HKT (UTC+8)",     value: "Asia/Hong_Kong" },
-  { label: "Asia/Taipei — CST (UTC+8)",        value: "Asia/Taipei" },
-  { label: "Asia/Shanghai — CST (UTC+8)",      value: "Asia/Shanghai" },
-  { label: "Asia/Tokyo — JST (UTC+9)",         value: "Asia/Tokyo" },
-  { label: "Asia/Seoul — KST (UTC+9)",         value: "Asia/Seoul" },
-  { label: "Asia/Jakarta — WIB (UTC+7)",       value: "Asia/Jakarta" },
-  { label: "Asia/Bangkok — ICT (UTC+7)",       value: "Asia/Bangkok" },
-  { label: "Asia/Ho_Chi_Minh — ICT (UTC+7)",  value: "Asia/Ho_Chi_Minh" },
-  { label: "Asia/Kolkata — IST (UTC+5:30)",    value: "Asia/Kolkata" },
-  { label: "Asia/Dubai — GST (UTC+4)",         value: "Asia/Dubai" },
-  { label: "Australia/Sydney — AEDT (UTC+11)", value: "Australia/Sydney" },
-  { label: "Pacific/Auckland — NZST (UTC+12)",value: "Pacific/Auckland" },
-  { label: "Europe/London — GMT (UTC+0)",      value: "Europe/London" },
-  { label: "Europe/Paris — CET (UTC+1)",       value: "Europe/Paris" },
-  { label: "America/New_York — EST (UTC-5)",   value: "America/New_York" },
-  { label: "America/Chicago — CST (UTC-6)",    value: "America/Chicago" },
-  { label: "America/Denver — MST (UTC-7)",     value: "America/Denver" },
-  { label: "America/Los_Angeles — PST (UTC-8)",value: "America/Los_Angeles" },
-  { label: "UTC",                              value: "UTC" },
-]
+  { label: "Manila (PHT)", value: "Asia/Manila", offset: "+08:00" },
+  { label: "Singapore (SGT)", value: "Asia/Singapore", offset: "+08:00" },
+  { label: "Kuala Lumpur (MYT)", value: "Asia/Kuala_Lumpur", offset: "+08:00" },
+  { label: "Hong Kong (HKT)", value: "Asia/Hong_Kong", offset: "+08:00" },
+  { label: "Taipei (CST)", value: "Asia/Taipei", offset: "+08:00" },
+  { label: "Shanghai (CST)", value: "Asia/Shanghai", offset: "+08:00" },
+
+  { label: "Tokyo (JST)", value: "Asia/Tokyo", offset: "+09:00" },
+  { label: "Seoul (KST)", value: "Asia/Seoul", offset: "+09:00" },
+
+  { label: "Jakarta (WIB)", value: "Asia/Jakarta", offset: "+07:00" },
+  { label: "Bangkok (ICT)", value: "Asia/Bangkok", offset: "+07:00" },
+  { label: "Ho Chi Minh (ICT)", value: "Asia/Ho_Chi_Minh", offset: "+07:00" },
+
+  { label: "Kolkata (IST)", value: "Asia/Kolkata", offset: "+05:30" },
+  { label: "Dubai (GST)", value: "Asia/Dubai", offset: "+04:00" },
+
+  { label: "Sydney (AEDT)", value: "Australia/Sydney", offset: "+11:00" },
+  { label: "Auckland (NZST)", value: "Pacific/Auckland", offset: "+12:00" },
+
+  { label: "London (GMT)", value: "Europe/London", offset: "+00:00" },
+  { label: "Paris (CET)", value: "Europe/Paris", offset: "+01:00" },
+
+  { label: "New York (EST)", value: "America/New_York", offset: "-05:00" },
+  { label: "Chicago (CST)", value: "America/Chicago", offset: "-06:00" },
+  { label: "Denver (MST)", value: "America/Denver", offset: "-07:00" },
+  { label: "Los Angeles (PST)", value: "America/Los_Angeles", offset: "-08:00" },
+
+  { label: "UTC", value: "UTC", offset: "+00:00" },
+];

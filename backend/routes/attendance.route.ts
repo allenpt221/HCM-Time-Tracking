@@ -1,6 +1,6 @@
 import express from 'express';
+import { verifyToken } from '../middleware/auth.middleware.js';
 import { punchIn, punchOut, userAttendance } from '../controller/attendance.controller.js';
-import { Admin, verifyToken } from '../middleware/auth.middleware.js';
 
 
 const Route = express.Router();

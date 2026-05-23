@@ -1,49 +1,17 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import {
-  Play, Square, CalendarDays, ChevronRight, X
+  Play, Square, CalendarDays, ChevronRight,
 } from "lucide-react"
 import { authStore } from "@/Stores/authStore"
 import { attendanceStore } from "@/Stores/attendanceStore"
 import PunchInAlert from "@/Modal/PunchInAlert"
 import AttendanceHistoryModal from "@/Modal/AttendanceHistory"
+import { formatElapsed, formatHM, parseTimestamp, to12Hour } from "@/lib/time"
 
 const today = new Date()
 const dateLabel = today.toLocaleDateString("en-US", {
   weekday: "long", month: "long", day: "numeric",
 })
-
-function pad(n: number) {
-  return String(n).padStart(2, "0")
-}
-
-function formatElapsed(seconds: number) {
-  const h = Math.floor(seconds / 3600)
-  const m = Math.floor((seconds % 3600) / 60)
-  const s = seconds % 60
-  return `${pad(h)}:${pad(m)}:${pad(s)}`
-}
-
-function formatHM(seconds: number) {
-  const h = Math.floor(seconds / 3600)
-  const m = Math.floor((seconds % 3600) / 60)
-  return `${h}h ${pad(m)}m`
-}
-
-function to12Hour(time: string) {
-  const [h, m] = time.split(":").map(Number)
-  const ampm = h >= 12 ? "PM" : "AM"
-  const hour = h % 12 || 12
-  return `${hour}:${String(m).padStart(2, "0")} ${ampm}`
-}
-
-function parseTimestamp(value: any): Date | null {
-  if (!value) return null
-  if (value?._seconds) return new Date(value._seconds * 1000)
-  if (value?.seconds) return new Date(value.seconds * 1000)
-  if (value?.toDate) return value.toDate()
-  const d = new Date(value)
-  return isNaN(d.getTime()) ? null : d
-}
 
 type Punch = { type: "in" | "out"; time: Date }
 
@@ -65,7 +33,7 @@ export default function Dashboard() {
   const [punches, setPunches] = useState<Punch[]>([])
   const [showHistory, setShowHistory] = useState(false)
   const [showPunchAlert, setShowPunchAlert] = useState(false)
-  const [punchAlertType, setPunchAlertType] = useState<'too-early' | 'too-late'>('too-early')
+  const [punchAlertType, setPunchAlertType] = useState<'too-early' | 'shift-ended'>('too-early')
 
   useEffect(() => {
     fetchAttendance()
@@ -88,8 +56,8 @@ export default function Dashboard() {
     return () => window.removeEventListener("keydown", handler)
   }, [])
 
-  const shiftStart = user?.schedule?.start ?? "09:00"
-  const shiftEnd   = user?.schedule?.end   ?? "18:00"
+  const shiftStart = useMemo(() => user?.schedule?.start ?? "09:00", [user])
+  const shiftEnd   = useMemo(() => user?.schedule?.end   ?? "18:00", [user])
 
   async function handlePunchIn() {
     if (isClockedIn) return
@@ -110,7 +78,7 @@ export default function Dashboard() {
     }
 
     if (currentMinutes >= shiftEndMinutes) {
-      setPunchAlertType('too-late')
+      setPunchAlertType('shift-ended')
       setShowPunchAlert(true)
       return
     }
@@ -291,7 +259,6 @@ export default function Dashboard() {
         onClose={() => setShowPunchAlert(false)}
       />
 
-      {/* History Modal */}
       <AttendanceHistoryModal
         show={showHistory}
         historyRows={historyRows}
